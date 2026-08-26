@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import streamlit.components.v1 as components
 
 # ==========================================
@@ -8,24 +8,30 @@ import streamlit.components.v1 as components
 # ==========================================
 st.set_page_config(page_title="TMS Tools", layout="centered", page_icon="🧰")
 
-# Helper callback to set time dropdowns to current time
-def set_time_to_now():
-    now = datetime.now()
-    st.session_state.hour = int(now.strftime("%I"))
-    st.session_state.minute = f"{now.minute:02d}"
-    st.session_state.ampm = now.strftime("%p")
+# Initialize timezone offset first (Defaults to -6 for MDT)
+if "tz_offset" not in st.session_state:
+    st.session_state.tz_offset = -6
 
-# Initialize session state variables to remember inputs and generated schedules
+# Helper callback to set time dropdowns to current LOCAL time
+def set_time_to_now():
+    utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
+    local_now = utc_now + timedelta(hours=st.session_state.tz_offset)
+    st.session_state.hour = int(local_now.strftime("%I"))
+    st.session_state.minute = f"{local_now.minute:02d}"
+    st.session_state.ampm = local_now.strftime("%p")
+
+# Initialize session state variables 
 if "schedule_generated" not in st.session_state:
     st.session_state.schedule_generated = False
 
-now = datetime.now()
 if "hour" not in st.session_state:
-    st.session_state.hour = int(now.strftime("%I"))
-if "minute" not in st.session_state:
-    st.session_state.minute = f"{(now.minute // 5 * 5):02d}" # Defaults to nearest 5 mins on first load
-if "ampm" not in st.session_state:
-    st.session_state.ampm = now.strftime("%p")
+    # Initialize the default time using the local timezone
+    utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
+    local_now = utc_now + timedelta(hours=st.session_state.tz_offset)
+    st.session_state.hour = int(local_now.strftime("%I"))
+    st.session_state.minute = f"{(local_now.minute // 5 * 5):02d}"
+    st.session_state.ampm = local_now.strftime("%p")
+    
 if "mode" not in st.session_state:
     st.session_state.mode = "MAGNETS"
 
@@ -34,60 +40,31 @@ if "mode" not in st.session_state:
 # ==========================================
 st.markdown("""
 <style>
-    /* Playful rounded font */
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
-    html, body, [class*="css"] { 
-        font-family: 'Nunito', sans-serif !important; 
+    html, body, [class*="css"] { font-family: 'Nunito', sans-serif !important; }
+    
+    .stTextInput > div > div > input, .stNumberInput > div > div > input, div[data-baseweb="select"] > div {
+        border-radius: 16px !important; border: 2px solid #FFE66D !important;
+        background-color: #FAFAFA !important; font-weight: 600 !important;
     }
     
-    /* Chunky, rounded inputs */
-    .stTextInput > div > div > input, 
-    .stNumberInput > div > div > input, 
-    div[data-baseweb="select"] > div {
-        border-radius: 16px !important;
-        border: 2px solid #FFE66D !important;
-        background-color: #FAFAFA !important;
-        font-weight: 600 !important;
-    }
-    
-    /* Playful 'Bouncy' Button */
     .stButton > button {
-        background-color: #FF6B6B !important;
-        color: white !important;
-        border-radius: 30px !important;
-        font-weight: 800 !important;
-        font-size: 16px !important;
-        border: none !important;
-        padding: 8px 28px !important;
-        box-shadow: 0 5px 0px #E63946 !important;
-        transition: all 0.1s ease !important;
-        margin-top: 5px;
-        margin-bottom: 5px;
+        background-color: #FF6B6B !important; color: white !important;
+        border-radius: 30px !important; font-weight: 800 !important; font-size: 16px !important;
+        border: none !important; padding: 8px 28px !important;
+        box-shadow: 0 5px 0px #E63946 !important; transition: all 0.1s ease !important;
+        margin-top: 5px; margin-bottom: 5px;
     }
-    .stButton > button:active {
-        transform: translateY(5px) !important;
-        box-shadow: 0 0px 0px #E63946 !important;
-    }
-    .stButton > button:hover {
-        background-color: #FF8787 !important;
-    }
+    .stButton > button:active { transform: translateY(5px) !important; box-shadow: 0 0px 0px #E63946 !important; }
+    .stButton > button:hover { background-color: #FF8787 !important; }
 
-    /* Dashed alert boxes for presets */
     div[data-testid="stAlert"] {
-        border-radius: 16px !important;
-        background-color: #F0F9FF !important;
-        border: 2px dashed #4ECDC4 !important;
-        color: #2D3748 !important;
-        border-left: 2px dashed #4ECDC4 !important;
+        border-radius: 16px !important; background-color: #F0F9FF !important;
+        border: 2px dashed #4ECDC4 !important; color: #2D3748 !important; border-left: 2px dashed #4ECDC4 !important;
     }
     
-    /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-    .stTabs [data-baseweb="tab"] {
-        border-radius: 16px 16px 0 0 !important;
-        font-weight: 800 !important;
-        padding: 10px 20px !important;
-    }
+    .stTabs [data-baseweb="tab"] { border-radius: 16px 16px 0 0 !important; font-weight: 800 !important; padding: 10px 20px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -123,7 +100,6 @@ components.html("""
 st.title("🧰 TMS Tools")
 tab1, tab2 = st.tabs(["📊 Percentage Calculator", "⏱️ Session Tracker"])
 
-# Helper function for strictly 12-hour formatted output in the table
 def format_12h(dt):
     return dt.strftime("%I:%M %p").lstrip("0")
 
@@ -157,25 +133,35 @@ with tab1:
             while current_pct <= end_pct:
                 data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
                 current_pct += step_pct
-            st.dataframe(pd.DataFrame(data), use_container_width=True, hide_index=True)
+            # Updated to width="stretch" to resolve your terminal warnings
+            st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
 
 # ==========================================
 # TAB 2: SESSION TRACKER
 # ==========================================
 with tab2:
     st.markdown("<br>", unsafe_allow_html=True)
-    
-    # 1. Mode Selection (Automatically remembered via 'key')
     mode = st.radio("Configuration Mode", ["MAGNETS", "MANIFEST", "Custom"], horizontal=True, key="mode", label_visibility="collapsed")
     st.markdown("<br>", unsafe_allow_html=True)
     
     col_time, col_info = st.columns([1.2, 2])
     
-    # 2. Custom 12-Hour Dropdown Picker
     with col_time:
         st.write("##### First Session Time")
         
-        st.button("🕒 Set to Now", on_click=set_time_to_now)
+        # Added a Timezone offset so the server can align with your local time
+        col_btn, col_tz = st.columns([1, 1.2])
+        with col_btn:
+            st.button("🕒 Set to Now", on_click=set_time_to_now)
+        with col_tz:
+            st.selectbox(
+                "Local TZ Offset", 
+                options=[i for i in range(-12, 13)], 
+                index=6, # Defaults to -6
+                format_func=lambda x: f"UTC{'+' if x >= 0 else ''}{x}", 
+                key="tz_offset",
+                label_visibility="collapsed"
+            )
         
         t1, t2, t3 = st.columns(3)
         with t1:
@@ -185,12 +171,10 @@ with tab2:
         with t3:
             ampm_val = st.selectbox("AM/PM", options=["AM", "PM"], key="ampm", label_visibility="collapsed")
             
-        # Convert the dropdowns into a datetime object for today
         time_str = f"{hour_val}:{min_val} {ampm_val}"
         start_time_obj = datetime.strptime(time_str, "%I:%M %p").time()
         start_dt = datetime.combine(datetime.today(), start_time_obj)
     
-    # 3. Setup variables based on mode
     with col_info:
         if mode == "MAGNETS":
             sessions, stim_dur, interval = 10, 10, 50
@@ -206,15 +190,16 @@ with tab2:
     
     st.divider()
     
-    # Generate Button updates the session state
     if st.button("Generate Schedule"):
         st.session_state.schedule_generated = True
         
-    # 4. Display the schedule if it has been generated
     if st.session_state.schedule_generated:
         tracker_data = []
         current_time = start_dt
-        current_real_time = datetime.now()
+        
+        # Calculate true local time based on your selected offset
+        utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
+        local_now = utc_now + timedelta(hours=st.session_state.tz_offset)
         
         active_idx = -1
         
@@ -222,19 +207,15 @@ with tab2:
             bring_back = current_time - timedelta(minutes=5)
             finish = current_time + timedelta(minutes=stim_dur) 
             
-            # BLOCK TRACKING LOGIC:
-            # A session becomes "active" the exact moment the previous session finishes.
-            # It stops being active the exact moment its own finish time passes.
-            if i == 1:
-                block_start = current_time - timedelta(days=1) # Catches anything before the 1st session
+            # STRICT BLOCK TRACKING: 
+            # A session is only active if the local time is exactly between its Bring Back and the next session's Bring Back.
+            if i < sessions:
+                next_bring_back = current_time + timedelta(minutes=interval) - timedelta(minutes=5)
+                if bring_back <= local_now < next_bring_back:
+                    active_idx = i - 1
             else:
-                prev_finish = (current_time - timedelta(minutes=interval)) + timedelta(minutes=stim_dur)
-                block_start = prev_finish
-                
-            block_end = finish
-            
-            if block_start <= current_real_time < block_end:
-                active_idx = i - 1 
+                if bring_back <= local_now <= finish:
+                    active_idx = i - 1
             
             tracker_data.append({
                 "Session": f"Session {i}",
@@ -244,20 +225,19 @@ with tab2:
             })
             current_time += timedelta(minutes=interval)
             
-        # Styling function for highlighting the active/upcoming session
         def highlight_active(x):
             df_style = pd.DataFrame('', index=x.index, columns=x.columns)
             if active_idx != -1 and active_idx in x.index:
-                # Applies the mint background to the active row
                 df_style.iloc[active_idx] = 'background-color: #E6FFFA; color: #00A389; font-weight: 800;'
             return df_style
 
         styled_df = pd.DataFrame(tracker_data).style.apply(highlight_active, axis=None)
-        st.dataframe(styled_df, use_container_width=True, hide_index=True)
         
-        # Refresh Highlight button under the table
+        # Updated to width="stretch" to resolve your terminal warnings
+        st.dataframe(styled_df, width="stretch", hide_index=True)
+        
         col_refresh, col_caption = st.columns([1, 2])
         with col_refresh:
             st.button("🔄 Refresh Highlight")
         with col_caption:
-            st.caption("The current/upcoming session is highlighted in green. The highlight automatically advances the moment a session finishes. Click refresh to update.")
+            st.caption("The current/upcoming session is highlighted in green. The highlight automatically advances the moment a session finishes.")
