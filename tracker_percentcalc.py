@@ -175,7 +175,6 @@ with tab2:
     with col_time:
         st.write("##### First Session Time")
         
-        # New "Set to Now" Button
         st.button("🕒 Set to Now", on_click=set_time_to_now)
         
         t1, t2, t3 = st.columns(3)
@@ -217,18 +216,25 @@ with tab2:
         current_time = start_dt
         current_real_time = datetime.now()
         
-        closest_idx = -1
-        min_diff = float('inf')
+        active_idx = -1
         
         for i in range(1, sessions + 1):
             bring_back = current_time - timedelta(minutes=5)
             finish = current_time + timedelta(minutes=stim_dur) 
             
-            # Find the session closest to the actual time right now
-            diff = abs((current_real_time - current_time).total_seconds())
-            if diff < min_diff:
-                min_diff = diff
-                closest_idx = i - 1 
+            # BLOCK TRACKING LOGIC:
+            # A session becomes "active" the exact moment the previous session finishes.
+            # It stops being active the exact moment its own finish time passes.
+            if i == 1:
+                block_start = current_time - timedelta(days=1) # Catches anything before the 1st session
+            else:
+                prev_finish = (current_time - timedelta(minutes=interval)) + timedelta(minutes=stim_dur)
+                block_start = prev_finish
+                
+            block_end = finish
+            
+            if block_start <= current_real_time < block_end:
+                active_idx = i - 1 
             
             tracker_data.append({
                 "Session": f"Session {i}",
@@ -238,20 +244,20 @@ with tab2:
             })
             current_time += timedelta(minutes=interval)
             
-        # Styling function for highlighting the closest session
-        def highlight_closest(x):
+        # Styling function for highlighting the active/upcoming session
+        def highlight_active(x):
             df_style = pd.DataFrame('', index=x.index, columns=x.columns)
-            if closest_idx != -1 and closest_idx in x.index:
-                # Applies a soft mint background to the closest row
-                df_style.iloc[closest_idx] = 'background-color: #E6FFFA; color: #00A389; font-weight: 800;'
+            if active_idx != -1 and active_idx in x.index:
+                # Applies the mint background to the active row
+                df_style.iloc[active_idx] = 'background-color: #E6FFFA; color: #00A389; font-weight: 800;'
             return df_style
 
-        styled_df = pd.DataFrame(tracker_data).style.apply(highlight_closest, axis=None)
+        styled_df = pd.DataFrame(tracker_data).style.apply(highlight_active, axis=None)
         st.dataframe(styled_df, use_container_width=True, hide_index=True)
         
-        # New "Refresh Highlight" button under the table
+        # Refresh Highlight button under the table
         col_refresh, col_caption = st.columns([1, 2])
         with col_refresh:
             st.button("🔄 Refresh Highlight")
         with col_caption:
-            st.caption("The session closest to the current time is highlighted in green. Click refresh to update the highlight as time passes.")
+            st.caption("The current/upcoming session is highlighted in green. The highlight automatically advances the moment a session finishes. Click refresh to update.")
