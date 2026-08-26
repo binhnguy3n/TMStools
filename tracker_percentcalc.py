@@ -173,11 +173,13 @@ with tab1:
         local_now = utc_now + timedelta(hours=st.session_state.tz_offset)
         
         active_idx = -1
+        banner_msg = ""
         
         for i in range(1, sessions + 1):
             bring_back = current_time - timedelta(minutes=5)
             finish = current_time + timedelta(minutes=stim_dur) 
             
+            # HIGHLIGHTING LOGIC: Keeps the green highlight active for the whole current block
             if i < sessions:
                 next_bring_back = current_time + timedelta(minutes=interval) - timedelta(minutes=5)
                 if bring_back <= local_now < next_bring_back:
@@ -185,6 +187,11 @@ with tab1:
             else:
                 if bring_back <= local_now <= finish:
                     active_idx = i - 1
+            
+            # BANNER LOGIC: Scans for the absolute first session where local time is less than Start Time
+            if banner_msg == "" and local_now < current_time:
+                bb_text = f" {format_12h(bring_back)}" if i > 1 else ""
+                banner_msg = f"Next: Session {i}{bb_text}"
             
             bring_back_str = "" if i == 1 else format_12h(bring_back)
             
@@ -197,20 +204,12 @@ with tab1:
             current_time += timedelta(minutes=interval)
         
         # Inject the active session data into the top banner placeholder
-        if active_idx != -1:
-            active_session = tracker_data[active_idx]
-            bb_msg = f" (Bring Back: {active_session['Bring Back']})" if active_session['Bring Back'] else ""
-            msg = f"📍 **Active / Next:** {active_session['Session']} starts at {active_session['Start Time']}{bb_msg}"
-        else:
-            first_bb = start_dt - timedelta(minutes=5)
-            if local_now < first_bb:
-                msg = f"⏳ **Waiting to start:** Session 1 starts at {format_12h(start_dt)}"
-            else:
-                msg = "✅ **All sessions completed for today!**"
+        if banner_msg == "":
+            banner_msg = "All sessions started for today!"
                 
         status_banner.markdown(f"""
         <div style="background-color: #E6FFFA; border: 2px dashed #00A389; border-radius: 12px; padding: 12px 16px; margin-top: -10px; margin-bottom: 20px; color: #007A66; font-weight: 700; text-align: center; font-size: 16px;">
-            {msg}
+            {banner_msg}
         </div>
         """, unsafe_allow_html=True)
             
@@ -228,7 +227,7 @@ with tab1:
         with col_refresh:
             st.button("🔄 Refresh Highlight")
         with col_caption:
-            st.caption("The current/upcoming session is highlighted in green. The highlight automatically advances the moment a session finishes.")
+            st.caption("The current block is highlighted in green. The banner at the top updates the moment a session starts.")
 
 
 # ==========================================
