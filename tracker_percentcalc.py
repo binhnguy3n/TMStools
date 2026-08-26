@@ -6,7 +6,14 @@ import streamlit.components.v1 as components
 # ==========================================
 # PAGE CONFIGURATION & SESSION STATE
 # ==========================================
-st.set_page_config(page_title="Utility Tools", layout="centered", page_icon="🧰")
+st.set_page_config(page_title="TMS Tools", layout="centered", page_icon="🧰")
+
+# Helper callback to set time dropdowns to current time
+def set_time_to_now():
+    now = datetime.now()
+    st.session_state.hour = int(now.strftime("%I"))
+    st.session_state.minute = f"{now.minute:02d}"
+    st.session_state.ampm = now.strftime("%p")
 
 # Initialize session state variables to remember inputs and generated schedules
 if "schedule_generated" not in st.session_state:
@@ -16,7 +23,7 @@ now = datetime.now()
 if "hour" not in st.session_state:
     st.session_state.hour = int(now.strftime("%I"))
 if "minute" not in st.session_state:
-    st.session_state.minute = f"{(now.minute // 5 * 5):02d}" # Rounds to nearest 5 mins
+    st.session_state.minute = f"{(now.minute // 5 * 5):02d}" # Defaults to nearest 5 mins on first load
 if "ampm" not in st.session_state:
     st.session_state.ampm = now.strftime("%p")
 if "mode" not in st.session_state:
@@ -54,7 +61,8 @@ st.markdown("""
         padding: 8px 28px !important;
         box-shadow: 0 5px 0px #E63946 !important;
         transition: all 0.1s ease !important;
-        margin-top: 10px;
+        margin-top: 5px;
+        margin-bottom: 5px;
     }
     .stButton > button:active {
         transform: translateY(5px) !important;
@@ -112,7 +120,7 @@ components.html("""
 </script>
 """, height=70)
 
-st.title("🧰 Utility Tools")
+st.title("🧰 TMS Tools")
 tab1, tab2 = st.tabs(["📊 Percentage Calculator", "⏱️ Session Tracker"])
 
 # Helper function for strictly 12-hour formatted output in the table
@@ -163,9 +171,13 @@ with tab2:
     
     col_time, col_info = st.columns([1.2, 2])
     
-    # 2. Custom 12-Hour Dropdown Picker (Bypasses browser military time)
+    # 2. Custom 12-Hour Dropdown Picker
     with col_time:
         st.write("##### First Session Time")
+        
+        # New "Set to Now" Button
+        st.button("🕒 Set to Now", on_click=set_time_to_now)
+        
         t1, t2, t3 = st.columns(3)
         with t1:
             hour_val = st.selectbox("Hr", options=list(range(1, 13)), key="hour", label_visibility="collapsed")
@@ -204,20 +216,19 @@ with tab2:
         tracker_data = []
         current_time = start_dt
         current_real_time = datetime.now()
-        active_idx = -1
+        
+        closest_idx = -1
+        min_diff = float('inf')
         
         for i in range(1, sessions + 1):
             bring_back = current_time - timedelta(minutes=5)
             finish = current_time + timedelta(minutes=stim_dur) 
             
-            # Highlight logic logic 
-            if i == sessions:
-                block_end = finish
-            else:
-                block_end = current_time + timedelta(minutes=interval) - timedelta(minutes=5)
-                
-            if bring_back <= current_real_time < block_end:
-                active_idx = i - 1 
+            # Find the session closest to the actual time right now
+            diff = abs((current_real_time - current_time).total_seconds())
+            if diff < min_diff:
+                min_diff = diff
+                closest_idx = i - 1 
             
             tracker_data.append({
                 "Session": f"Session {i}",
@@ -227,13 +238,20 @@ with tab2:
             })
             current_time += timedelta(minutes=interval)
             
-        # Styling function for the playful theme
-        def highlight_active(x):
+        # Styling function for highlighting the closest session
+        def highlight_closest(x):
             df_style = pd.DataFrame('', index=x.index, columns=x.columns)
-            if active_idx != -1 and active_idx in x.index:
-                # Applies a soft mint background to the active row
-                df_style.iloc[active_idx] = 'background-color: #E6FFFA; color: #00A389; font-weight: 800;'
+            if closest_idx != -1 and closest_idx in x.index:
+                # Applies a soft mint background to the closest row
+                df_style.iloc[closest_idx] = 'background-color: #E6FFFA; color: #00A389; font-weight: 800;'
             return df_style
 
-        styled_df = pd.DataFrame(tracker_data).style.apply(highlight_active, axis=None)
+        styled_df = pd.DataFrame(tracker_data).style.apply(highlight_closest, axis=None)
         st.dataframe(styled_df, use_container_width=True, hide_index=True)
+        
+        # New "Refresh Highlight" button under the table
+        col_refresh, col_caption = st.columns([1, 2])
+        with col_refresh:
+            st.button("🔄 Refresh Highlight")
+        with col_caption:
+            st.caption("The session closest to the current time is highlighted in green. Click refresh to update the highlight as time passes.")
