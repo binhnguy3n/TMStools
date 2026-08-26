@@ -97,48 +97,21 @@ components.html("""
 </script>
 """, height=70)
 
+# Placeholder for the Dynamic "Next Session" Banner
+status_banner = st.empty()
+
 st.title("🧰 TMS Tools")
-tab1, tab2 = st.tabs(["📊 Percentage Calculator", "⏱️ Session Tracker"])
+
+# Swapped the order of the tabs
+tab1, tab2 = st.tabs(["⏱️ Session Tracker", "📊 Percentage Calculator"])
 
 def format_12h(dt):
     return dt.strftime("%I:%M %p").lstrip("0")
 
 # ==========================================
-# TAB 1: PERCENTAGE CALCULATOR
+# TAB 1: SESSION TRACKER
 # ==========================================
 with tab1:
-    st.markdown("<br>", unsafe_allow_html=True)
-    col_a, col_b = st.columns(2, gap="large")
-    
-    with col_a:
-        st.write("##### 1. Known Values")
-        known_pct = st.number_input("Known Percentage (%)", min_value=0.1, value=120.0, step=1.0)
-        known_val = st.number_input("Known Value", value=78.0, step=1.0)
-    with col_b:
-        st.write("##### 2. Table Settings")
-        start_pct = st.number_input("Start Percentage (%)", value=30.0, step=1.0)
-        end_pct = st.number_input("End Percentage (%)", value=120.0, step=1.0)
-        step_pct = st.number_input("Step Percentage (%)", min_value=0.1, value=5.0, step=1.0)
-    
-    st.divider()
-    
-    if known_pct > 0:
-        base_value = known_val / (known_pct / 100)
-        step_value = base_value * (step_pct / 100)
-        st.info(f"**Base Value (100%):** {base_value:g} &nbsp;&nbsp;|&nbsp;&nbsp; **{step_pct:g}% increment:** {step_value:g}", icon="💡")
-        
-        data = []
-        current_pct = start_pct
-        if step_pct > 0 and (end_pct - start_pct) / step_pct <= 1000:
-            while current_pct <= end_pct:
-                data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
-                current_pct += step_pct
-            st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
-
-# ==========================================
-# TAB 2: SESSION TRACKER
-# ==========================================
-with tab2:
     st.markdown("<br>", unsafe_allow_html=True)
     mode = st.radio("Configuration Mode", ["MAGNETS", "MANIFEST", "Custom"], horizontal=True, key="mode", label_visibility="collapsed")
     st.markdown("<br>", unsafe_allow_html=True)
@@ -148,9 +121,10 @@ with tab2:
     with col_time:
         st.write("##### First Session Time")
         
-        col_btn, col_tz = st.columns([1, 1.2])
+        # Adjusted column widths to better fit the shorter "Now" text
+        col_btn, col_tz = st.columns([0.8, 1.2])
         with col_btn:
-            st.button("🕒 Set to Now", on_click=set_time_to_now)
+            st.button("🕒 Now", on_click=set_time_to_now)
         with col_tz:
             st.selectbox(
                 "Local TZ Offset", 
@@ -212,7 +186,6 @@ with tab2:
                 if bring_back <= local_now <= finish:
                     active_idx = i - 1
             
-            # Logic to leave the first row's "Bring Back" cell completely blank
             bring_back_str = "" if i == 1 else format_12h(bring_back)
             
             tracker_data.append({
@@ -222,6 +195,24 @@ with tab2:
                 "Finish Time": format_12h(finish)
             })
             current_time += timedelta(minutes=interval)
+        
+        # Inject the active session data into the top banner placeholder
+        if active_idx != -1:
+            active_session = tracker_data[active_idx]
+            bb_msg = f" (Bring Back: {active_session['Bring Back']})" if active_session['Bring Back'] else ""
+            msg = f"📍 **Active / Next:** {active_session['Session']} starts at {active_session['Start Time']}{bb_msg}"
+        else:
+            first_bb = start_dt - timedelta(minutes=5)
+            if local_now < first_bb:
+                msg = f"⏳ **Waiting to start:** Session 1 starts at {format_12h(start_dt)}"
+            else:
+                msg = "✅ **All sessions completed for today!**"
+                
+        status_banner.markdown(f"""
+        <div style="background-color: #E6FFFA; border: 2px dashed #00A389; border-radius: 12px; padding: 12px 16px; margin-top: -10px; margin-bottom: 20px; color: #007A66; font-weight: 700; text-align: center; font-size: 16px;">
+            {msg}
+        </div>
+        """, unsafe_allow_html=True)
             
         def highlight_active(x):
             df_style = pd.DataFrame('', index=x.index, columns=x.columns)
@@ -238,3 +229,36 @@ with tab2:
             st.button("🔄 Refresh Highlight")
         with col_caption:
             st.caption("The current/upcoming session is highlighted in green. The highlight automatically advances the moment a session finishes.")
+
+
+# ==========================================
+# TAB 2: PERCENTAGE CALCULATOR
+# ==========================================
+with tab2:
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_a, col_b = st.columns(2, gap="large")
+    
+    with col_a:
+        st.write("##### 1. Known Values")
+        known_pct = st.number_input("Known Percentage (%)", min_value=0.1, value=120.0, step=1.0)
+        known_val = st.number_input("Known Value", value=78.0, step=1.0)
+    with col_b:
+        st.write("##### 2. Table Settings")
+        start_pct = st.number_input("Start Percentage (%)", value=30.0, step=1.0)
+        end_pct = st.number_input("End Percentage (%)", value=120.0, step=1.0)
+        step_pct = st.number_input("Step Percentage (%)", min_value=0.1, value=5.0, step=1.0)
+    
+    st.divider()
+    
+    if known_pct > 0:
+        base_value = known_val / (known_pct / 100)
+        step_value = base_value * (step_pct / 100)
+        st.info(f"**Base Value (100%):** {base_value:g} &nbsp;&nbsp;|&nbsp;&nbsp; **{step_pct:g}% increment:** {step_value:g}", icon="💡")
+        
+        data = []
+        current_pct = start_pct
+        if step_pct > 0 and (end_pct - start_pct) / step_pct <= 1000:
+            while current_pct <= end_pct:
+                data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
+                current_pct += step_pct
+            st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
