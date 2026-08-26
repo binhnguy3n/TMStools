@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
+import streamlit.components.v1 as components
 
 # ==========================================
 # PAGE CONFIGURATION & SESSION STATE
 # ==========================================
-st.set_page_config(page_title="Utility Tools", layout="centered", page_icon="🧸")
+st.set_page_config(page_title="Utility Tools", layout="centered", page_icon="🧰")
 
 # Initialize session state variables to remember inputs and generated schedules
 if "schedule_generated" not in st.session_state:
@@ -82,7 +83,36 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🧸 Utility Tools")
+# ==========================================
+# LIVE DATE/TIME BANNER (Playground Style)
+# ==========================================
+components.html("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap');
+    body { margin: 0; font-family: 'Nunito', sans-serif; background-color: transparent; }
+    .banner {
+        background-color: #FAFAFA; border-radius: 16px; padding: 12px 20px;
+        display: flex; justify-content: space-between; align-items: center;
+        border: 2px dashed #4ECDC4; color: #2D3748;
+    }
+    .date { font-size: 16px; font-weight: 600; color: #6B7280; }
+    .time { font-size: 20px; font-weight: 800; color: #FF6B6B; }
+</style>
+<div class="banner">
+    <div class="date" id="date"></div>
+    <div class="time" id="time"></div>
+</div>
+<script>
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('date').innerText = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('time').innerText = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+    }
+    setInterval(updateClock, 1000); updateClock();
+</script>
+""", height=70)
+
+st.title("🧰 Utility Tools")
 tab1, tab2 = st.tabs(["📊 Percentage Calculator", "⏱️ Session Tracker"])
 
 # Helper function for strictly 12-hour formatted output in the table
