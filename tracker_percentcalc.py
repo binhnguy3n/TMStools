@@ -133,7 +133,6 @@ with tab1:
             while current_pct <= end_pct:
                 data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
                 current_pct += step_pct
-            # Updated to width="stretch" to resolve your terminal warnings
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
 
 # ==========================================
@@ -149,7 +148,6 @@ with tab2:
     with col_time:
         st.write("##### First Session Time")
         
-        # Added a Timezone offset so the server can align with your local time
         col_btn, col_tz = st.columns([1, 1.2])
         with col_btn:
             st.button("🕒 Set to Now", on_click=set_time_to_now)
@@ -197,7 +195,6 @@ with tab2:
         tracker_data = []
         current_time = start_dt
         
-        # Calculate true local time based on your selected offset
         utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
         local_now = utc_now + timedelta(hours=st.session_state.tz_offset)
         
@@ -207,8 +204,6 @@ with tab2:
             bring_back = current_time - timedelta(minutes=5)
             finish = current_time + timedelta(minutes=stim_dur) 
             
-            # STRICT BLOCK TRACKING: 
-            # A session is only active if the local time is exactly between its Bring Back and the next session's Bring Back.
             if i < sessions:
                 next_bring_back = current_time + timedelta(minutes=interval) - timedelta(minutes=5)
                 if bring_back <= local_now < next_bring_back:
@@ -217,9 +212,12 @@ with tab2:
                 if bring_back <= local_now <= finish:
                     active_idx = i - 1
             
+            # Logic to leave the first row's "Bring Back" cell completely blank
+            bring_back_str = "" if i == 1 else format_12h(bring_back)
+            
             tracker_data.append({
                 "Session": f"Session {i}",
-                "Bring Back (-5m)": format_12h(bring_back),
+                "Bring Back": bring_back_str,
                 "Start Time": format_12h(current_time),
                 "Finish Time": format_12h(finish)
             })
@@ -233,7 +231,6 @@ with tab2:
 
         styled_df = pd.DataFrame(tracker_data).style.apply(highlight_active, axis=None)
         
-        # Updated to width="stretch" to resolve your terminal warnings
         st.dataframe(styled_df, width="stretch", hide_index=True)
         
         col_refresh, col_caption = st.columns([1, 2])
