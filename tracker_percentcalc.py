@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, timezone
+import streamlit.components.v1 as components
 
 # ==========================================
 # PAGE CONFIGURATION & SESSION STATE
@@ -101,7 +102,9 @@ st.markdown(f"""
     
     .stApp {{ background-color: {theme['bg_color']} !important; }}
     h1, h2, h3, h4, h5, h6 {{ color: {theme['text_header']} !important; }}
-    p, label, li, span {{ color: {theme['text_main']} !important; }}
+    
+    /* Removed the global 'span' override so inline text colors work again! */
+    p, label, li {{ color: {theme['text_main']} !important; }}
     
     /* Inputs */
     .stTextInput > div > div > input, .stNumberInput > div > div > input, div[data-baseweb="select"] > div {{
@@ -166,51 +169,25 @@ st.markdown(f"""
     .stTabs [data-baseweb="tab-highlight"],
     .stTabs [data-baseweb="tab-border"],
     .stTabs [data-testid="stTabBorder"] {{
-        display: none !important;
-        background-color: transparent !important;
-        border: none !important;
-        opacity: 0 !important;
-        height: 0px !important;
-        width: 0px !important;
+        display: none !important; background-color: transparent !important; border: none !important; opacity: 0 !important; height: 0px !important; width: 0px !important;
     }}
     
     /* 2. Give the container room so drop shadows don't clip */
-    .stTabs [data-baseweb="tab-list"] {{ 
-        gap: 16px !important; 
-        padding-bottom: 15px !important; 
-        overflow: visible !important;
-    }}
+    .stTabs [data-baseweb="tab-list"] {{ gap: 16px !important; padding-bottom: 15px !important; overflow: visible !important; }}
     
-    /* 3. The Tabs (Globally targeting elements) */
+    /* 3. The Tabs */
     .stTabs [data-baseweb="tab"] {{ 
-        background-color: {theme['panel_bg']} !important;
-        border: 3px solid {theme['border']} !important;
-        border-radius: 8px !important;
-        padding: 8px 20px !important;
-        color: {theme['text_main']} !important;
-        font-weight: 900 !important;
-        font-size: 16px !important;
-        box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important;
-        transition: all 0.1s ease !important;
-        margin: 0 !important; 
-        min-width: fit-content !important; 
-        height: auto !important;
+        background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
+        padding: 8px 20px !important; color: {theme['text_main']} !important; font-weight: 900 !important; font-size: 16px !important;
+        box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; margin: 0 !important; min-width: fit-content !important; height: auto !important;
     }}
-    .stTabs [data-baseweb="tab"]:hover {{
-        background-color: {theme['btn_sec_hover']} !important;
-    }}
+    .stTabs [data-baseweb="tab"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
     
-    /* 4. The Active Tab - USING RELATIVE POSITIONING TO PREVENT CLIPPING! */
+    /* 4. The Active Tab - Using relative positioning to prevent clipping */
     .stTabs [aria-selected="true"] {{ 
-        background-color: {theme['btn_primary_bg']} !important; 
-        color: {theme['btn_primary_text']} !important;
-        box-shadow: 0px 0px 0px transparent !important; 
-        position: relative !important;
-        top: 4px !important; 
-        left: 4px !important;
-        border-color: {theme['border']} !important;
+        background-color: {theme['btn_primary_bg']} !important; color: {theme['btn_primary_text']} !important;
+        box-shadow: 0px 0px 0px transparent !important; position: relative !important; top: 4px !important; left: 4px !important; border-color: {theme['border']} !important;
     }}
-    
     .stTabs [data-baseweb="tab"] p, .stTabs [data-baseweb="tab"] span {{ font-weight: 900 !important; }}
     
     /* ---------------------------------------------------- */
@@ -222,36 +199,16 @@ st.markdown(f"""
     }}
     [data-testid="stTable"] table {{ width: 100% !important; border-collapse: collapse !important; }}
     [data-testid="stTable"] th {{ background-color: {theme['panel_bg']} !important; border-bottom: 3px solid {theme['border']} !important; font-weight: 900 !important; white-space: nowrap !important; color: {theme['text_header']} !important; }}
-    [data-testid="stTable"] td, [data-testid="stTable"] th {{ padding: 12px 10px !important; font-weight: 700; color: {theme['text_main']}; white-space: nowrap !important;}}
+    
+    /* Removed text_main override here so inline Pandas Styler colors can shine through */
+    [data-testid="stTable"] td, [data-testid="stTable"] th {{ padding: 12px 10px !important; font-weight: 700; white-space: nowrap !important;}}
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# NATIVE DOM DATE/TIME BANNER (With embedded looping JS)
-# ==========================================
-st.html(f"""
-<div style="background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px; display: flex; justify-content: center; align-items: center; gap: 40px; border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px;">
-    <div id="dom-date" style="font-size: 18px; font-weight: 700; color: {theme['text_main']};"></div>
-    <div id="dom-time" style="font-size: 22px; font-weight: 900; color: {theme['time_col']};"></div>
-</div>
-<script>
-    (function() {{
-        function updateClock() {{
-            const doc = window.parent.document || document;
-            const dateEl = doc.getElementById('dom-date');
-            const timeEl = doc.getElementById('dom-time');
-            if (dateEl && timeEl) {{
-                const now = new Date();
-                dateEl.innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
-                timeEl.innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
-            }}
-        }}
-        setInterval(updateClock, 1000);
-        updateClock();
-    }})();
-</script>
-""")
 
+# ==========================================
+# 1. TITLE & TOGGLE
+# ==========================================
 col_title, col_toggle = st.columns([3, 1])
 with col_title:
     st.title("🧰 TMS Tools")
@@ -259,11 +216,45 @@ with col_toggle:
     st.markdown("<br>", unsafe_allow_html=True) 
     st.toggle("🕶️ Synthwave", key="synthwave_toggle")
 
-status_banner = st.empty()
+
+# ==========================================
+# 2. CLOCK BANNER (Self-Contained Iframe to guarantee JS load)
+# ==========================================
+components.html(f"""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
+    body {{ margin: 0; padding: 5px; font-family: 'Nunito', sans-serif; background-color: transparent; }}
+    .banner {{
+        background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px;
+        display: flex; justify-content: center; align-items: center; gap: 40px; 
+        border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']};
+    }}
+    .date {{ font-size: 18px; font-weight: 700; color: {theme['text_main']}; }}
+    .time {{ font-size: 22px; font-weight: 900; color: {theme['time_col']}; }}
+</style>
+<div class="banner">
+    <div class="date" id="date"></div>
+    <div class="time" id="time"></div>
+</div>
+<script>
+    function updateClock() {{
+        const now = new Date();
+        document.getElementById('date').innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
+        document.getElementById('time').innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
+    }}
+    setInterval(updateClock, 1000); updateClock();
+</script>
+""", height=90)
+
+
+# ==========================================
+# 3. TABS
+# ==========================================
 tab1, tab2 = st.tabs(["⏱️ Session Tracker", "📊 Percentage Calculator"])
 
 def format_12h(dt):
     return dt.strftime("%I:%M %p").lstrip("0")
+
 
 # ==========================================
 # TAB 1: SESSION TRACKER
@@ -339,78 +330,56 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            # Fully standalone button mimicking Streamlit styling exactly, with embedded library loader JS
-            st.html(f"""
-            <div style="display: flex; justify-content: flex-start; align-items: flex-start; padding-top: 1px;">
-                <button id="capture-btn" style="
-                    background-color: {theme['panel_bg']}; color: {theme['border']}; 
-                    border: 3px solid {theme['border']}; border-radius: 8px;
-                    width: 42px; height: 42px; font-size: 20px; 
-                    box-shadow: 4px 4px 0px {theme['border']}; 
-                    cursor: pointer; display: flex; align-items: center; justify-content: center;
-                    padding: 0; margin: 0; outline: none;
-                " 
-                onmouseover="this.style.filter='brightness(1.2)';" 
-                onmouseout="this.style.filter='none';" 
-                onmousedown="this.style.position='relative'; this.style.top='4px'; this.style.left='4px'; this.style.boxShadow='none';" 
-                onmouseup="this.style.position='static'; this.style.top='0px'; this.style.left='0px'; this.style.boxShadow='4px 4px 0px {theme['border']}';"
-                title="Download Schedule Image">
-                    📷
-                </button>
-            </div>
+            # Self-contained iframe for the camera button to avoid sandbox issues
+            components.html(f"""
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
+                body {{ margin: 0; padding: 4px; display: flex; align-items: flex-start; justify-content: flex-start; font-family: 'Nunito', sans-serif; background: transparent;}}
+                .camera-btn {{
+                    background-color: {theme['panel_bg']}; color: {theme['border']}; border: 3px solid {theme['border']}; border-radius: 8px;
+                    width: 42px; height: 42px; font-size: 20px; box-shadow: 4px 4px 0px {theme['border']}; 
+                    cursor: pointer; transition: all 0.1s ease; display: flex; align-items: center; justify-content: center;
+                    padding: 0; margin: 0; box-sizing: border-box; line-height: 1; outline: none;
+                }}
+                .camera-btn:active {{ transform: translate(4px, 4px); box-shadow: 0px 0px 0px transparent; }}
+                .camera-btn:hover {{ filter: brightness(1.2); }}
+            </style>
+            <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷</button>
             <script>
-                (function() {{
-                    function attachCameraEvent() {{
-                        const doc = window.parent.document || document;
-                        const btn = doc.getElementById('capture-btn');
-                        
-                        if (btn && !btn.dataset.attached) {{
-                            btn.addEventListener('click', function(e) {{
-                                e.preventDefault();
-                                
-                                function executeCapture() {{
-                                    const target = doc.querySelector('[data-testid="stTable"]');
-                                    if (target) {{
-                                        html2canvas(target, {{
-                                            backgroundColor: '{theme["bg_color"]}', 
-                                            scale: 2,
-                                            onclone: function (clonedDoc) {{
-                                                const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
-                                                cells.forEach(cell => {{
-                                                    cell.style.fontFamily = 'Arial, sans-serif';
-                                                    cell.style.letterSpacing = 'normal';
-                                                    cell.style.whiteSpace = 'nowrap';
-                                                }});
-                                            }}
-                                        }}).then(canvas => {{
-                                            const link = document.createElement('a');
-                                            link.download = 'TMS_Schedule.png';
-                                            link.href = canvas.toDataURL();
-                                            link.click();
-                                        }});
-                                    }} else {{
-                                        alert('Table not found.');
-                                    }}
+                function takePic() {{
+                    try {{
+                        const target = window.parent.document.querySelector('[data-testid="stTable"]');
+                        if (target) {{
+                            html2canvas(target, {{
+                                backgroundColor: '{theme["bg_color"]}', 
+                                scale: 2,
+                                onclone: function (clonedDoc) {{
+                                    const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
+                                    cells.forEach(cell => {{
+                                        cell.style.fontFamily = 'Arial, sans-serif';
+                                        cell.style.letterSpacing = 'normal';
+                                        cell.style.whiteSpace = 'nowrap';
+                                    }});
                                 }}
-
-                                if (typeof html2canvas === 'undefined') {{
-                                    const script = document.createElement('script');
-                                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-                                    script.onload = executeCapture;
-                                    (doc.head || document.head).appendChild(script);
-                                }} else {{
-                                    executeCapture();
-                                }}
+                            }}).then(canvas => {{
+                                const link = document.createElement('a');
+                                link.download = 'TMS_Schedule.png';
+                                link.href = canvas.toDataURL();
+                                link.click();
                             }});
-                            btn.dataset.attached = 'true';
-                        }} else if (!btn) {{
-                            setTimeout(attachCameraEvent, 500);
+                        }} else {{
+                            alert('Table not found.');
                         }}
+                    }} catch (e) {{
+                        alert('Browser security prevents capturing the image directly. Please take a manual screenshot.');
                     }}
-                    attachCameraEvent();
-                }})();
+                }}
             </script>
-            """)
+            """, height=60)
+            
+        # Place the Next Session Status Banner directly above the generated table
+        status_banner = st.empty()
             
         tracker_data = []
         current_time = start_dt
@@ -454,7 +423,7 @@ with tab1:
             banner_msg = "All sessions started for today!"
                 
         status_banner.markdown(f"""
-        <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
+        <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: 15px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
             {banner_msg}
         </div>
         """, unsafe_allow_html=True)
