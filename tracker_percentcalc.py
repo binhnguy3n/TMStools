@@ -18,6 +18,9 @@ def set_time_to_now():
     st.session_state.minute = f"{local_now.minute:02d}"
     st.session_state.ampm = local_now.strftime("%p")
 
+def set_mode(m):
+    st.session_state.mode = m
+
 if "schedule_generated" not in st.session_state:
     st.session_state.schedule_generated = False
 
@@ -57,7 +60,7 @@ st.markdown("""
     button[kind="primary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
     button[kind="primary"]:hover { background-color: #FF8787 !important; }
 
-    /* Secondary buttons (Refresh) turned into perfect square icons */
+    /* Secondary buttons (Mode Selectors, Refresh) */
     button[kind="secondary"] {
         background-color: white !important; color: #1E1E1E !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 20px !important;
@@ -67,6 +70,13 @@ st.markdown("""
     }
     button[kind="secondary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
     button[kind="secondary"]:hover { background-color: #E6FFFA !important; }
+
+    /* The "Active Tab" Hack: Any disabled secondary button looks like a pressed red button */
+    button[kind="secondary"]:disabled {
+        background-color: #FF6B6B !important; color: white !important;
+        transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important;
+        opacity: 1 !important; cursor: default !important; border-color: #1E1E1E !important;
+    }
 
     /* Preset Info Boxes */
     div[data-testid="stAlert"] {
@@ -132,7 +142,18 @@ def format_12h(dt):
 # ==========================================
 with tab1:
     st.markdown("<br>", unsafe_allow_html=True)
-    mode = st.radio("Configuration Mode", ["MAGNETS", "MANIFEST", "Custom"], horizontal=True, key="mode", label_visibility="collapsed")
+    
+    # Mode selection using visual emoji buttons
+    st.write("##### Configuration Mode")
+    mode = st.session_state.mode
+    col_m1, col_m2, col_m3, col_mspace = st.columns([0.15, 0.15, 0.15, 2.5])
+    with col_m1:
+        st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset")
+    with col_m2:
+        st.button("✨", key="btn_man", on_click=set_mode, args=("MANIFEST",), disabled=(mode == "MANIFEST"), help="MANIFEST Preset")
+    with col_m3:
+        st.button("⚙️", key="btn_cus", on_click=set_mode, args=("Custom",), disabled=(mode == "Custom"), help="Custom Configuration")
+    
     st.markdown("<br>", unsafe_allow_html=True)
     
     col_time, col_info = st.columns([1.2, 2])
@@ -180,8 +201,8 @@ with tab1:
     
     st.divider()
     
-    # Adjusted columns so the Generate Button gets space, and the two icon buttons fit perfectly next to it
-    col_gen, col_ref, col_cam, col_spacer = st.columns([1.6, 0.5, 0.5, 2])
+    # Grouped strictly left to make them equidistant visually
+    col_gen, col_ref, col_cam, col_spacer = st.columns([1.3, 0.35, 0.35, 2.5])
     
     with col_gen:
         if st.button("Generate Schedule", type="primary"):
@@ -192,12 +213,11 @@ with tab1:
             st.button("🔄", help="Update the green highlight")
             
         with col_cam:
-            # Custom 42x42 square camera icon button
             components.html("""
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
             <style>
                 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
-                body { margin: 0; padding: 0; display: flex; align-items: flex-start; font-family: 'Nunito', sans-serif;}
+                body { margin: 0; padding: 0; display: flex; align-items: flex-start; justify-content: flex-start; font-family: 'Nunito', sans-serif;}
                 .camera-btn {
                     background-color: white; color: #1E1E1E; border: 3px solid #1E1E1E; border-radius: 8px;
                     width: 42px; height: 42px; font-size: 20px; box-shadow: 4px 4px 0px #1E1E1E; 
@@ -265,8 +285,6 @@ with tab1:
                 bb_text = f"{format_12h(bring_back)}" if i > 1 else ""
                 session_html = f'<span style="color: #845EF7; font-weight: 900;">Session {i}</span>'
                 time_html = f'<span style="color: #3B82F6; font-weight: 900;">{bb_text}</span>' if bb_text else ""
-                
-                # Added 5 precise non-breaking spaces here to create a clear gap between the Session Name and the Time
                 spacing = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" if bb_text else ""
                 banner_msg = f"Next: &nbsp;&nbsp; {session_html}{spacing}{time_html}"
             
@@ -291,26 +309,21 @@ with tab1:
             
         def highlight_custom_cells(x):
             df_style = pd.DataFrame('', index=x.index, columns=x.columns)
-            # Use enumerate to keep track of the row number for Zebra Striping
             for row_num, r in enumerate(x.index):
                 for c in x.columns:
                     style_str = ""
                     
-                    # 1. Active Row Override (Always Green)
                     if r == active_idx:
                         style_str += "background-color: #E6FFFA; "
                         if c == "Session":
                             style_str += "color: #845EF7; font-weight: 900;" 
                         else:
                             style_str += "color: #00A389; font-weight: 900;" 
-                            
-                    # 2. Inactive Rows (Apply Zebra Striping)
                     else:
+                        # Zebra Striping for inactive rows
                         if row_num % 2 == 1:
-                            # Odd rows get a soft alternating gray background
                             style_str += "background-color: #F3F4F6; "
                         else:
-                            # Even rows stay white
                             style_str += "background-color: #FFFFFF; "
                             
                         if c == "Session":
