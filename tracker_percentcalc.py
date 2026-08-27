@@ -13,6 +13,7 @@ if "tz_offset" not in st.session_state:
 if "synthwave_toggle" not in st.session_state:
     st.session_state.synthwave_toggle = False
 
+# Initializes safely to prevent terminal warnings!
 if "known_val_input" not in st.session_state:
     st.session_state.known_val_input = 0.0
 
@@ -71,13 +72,14 @@ if is_synthwave:
         "zebra_bg": "#0e1017",
         "session_col": "#FF2A6D",
         "time_col": "#05D9E8",
-        "clock_time_col": "#00FF9D",   # Neon Green for the Clock!
+        "clock_time_col": "#00FF9D",
         "next_banner_bg": "#151821",
         "next_banner_border": "#05D9E8",
         "next_banner_shadow": "#FF2A6D",
-        "disabled_bg": "#CCFFEA",      # Light green box background
-        "disabled_text": "#023020",    # Dark green text
-        "disabled_border": "#00FF9D"   # Neon green border
+        "clock_shadow": "#FF2A6D",  
+        "disabled_bg": "#CCFFEA",
+        "disabled_text": "#023020",
+        "disabled_border": "#00FF9D"
     }
 else:
     theme = {
@@ -100,13 +102,14 @@ else:
         "zebra_bg": "#F3F4F6",
         "session_col": "#845EF7",
         "time_col": "#3B82F6",
-        "clock_time_col": "#845EF7",   # Royal Purple for the Clock!
+        "clock_time_col": "#845EF7",
         "next_banner_bg": "#E6FFFA",
         "next_banner_border": "#1E1E1E",
         "next_banner_shadow": "#00A389",
-        "disabled_bg": "#D1FAE5",      # Light green box background
-        "disabled_text": "#064E3B",    # Dark forest green text
-        "disabled_border": "#059669"   # Standard green border
+        "clock_shadow": "#FF6B6B",  
+        "disabled_bg": "#D1FAE5",
+        "disabled_text": "#064E3B",
+        "disabled_border": "#059669"
     }
 
 # ==========================================
@@ -150,7 +153,7 @@ st.markdown(f"""
     /* Stop Streamlit flexbox from dynamically squishing/stretching buttons */
     div[data-testid="stButton"] {{ width: fit-content !important; }}
 
-    /* Primary buttons (Generate, Now) */
+    /* Primary buttons (Generate, Now, Use Value) */
     button[kind="primary"] {{
         background-color: {theme['btn_primary_bg']} !important; color: {theme['btn_primary_text']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
@@ -295,7 +298,6 @@ with col_toggle:
 # ==========================================
 clock_now = datetime.now(timezone.utc) + timedelta(hours=st.session_state.tz_offset)
 current_date_str = clock_now.strftime("%A, %B %d, %Y")
-# Includes the seconds directly in the backup Python rendering!
 current_time_str = clock_now.strftime("%I:%M:%S %p").lstrip("0")
 
 st.markdown(f"""
@@ -484,7 +486,6 @@ with tab2:
     with rmt_col1:
         rmt_val = st.number_input("Resting Motor Threshold (RMT)", min_value=0.0, value=0.0, step=1.0)
     
-    # Mathematical rounding rule applied directly to the RMT output!
     target_120 = int(round(rmt_val * 1.2))
     
     with rmt_col2:
