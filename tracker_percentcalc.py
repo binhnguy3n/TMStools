@@ -40,7 +40,7 @@ if "mode" not in st.session_state:
 # ==========================================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
     html, body, [class*="css"] { font-family: 'Nunito', sans-serif !important; }
     
     .stTextInput > div > div > input, .stNumberInput > div > div > input, div[data-baseweb="select"] > div {
@@ -65,6 +65,12 @@ st.markdown("""
     
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
     .stTabs [data-baseweb="tab"] { border-radius: 16px 16px 0 0 !important; font-weight: 800 !important; padding: 10px 20px !important; }
+    
+    /* Custom Styling for the new Static st.table() to match the Playground aesthetic */
+    [data-testid="stTable"] table { width: 100% !important; border-collapse: collapse !important; }
+    [data-testid="stTable"] th { background-color: #FAFAFA !important; border-bottom: 2px dashed #4ECDC4 !important; font-weight: 800 !important; }
+    [data-testid="stTable"] td, [data-testid="stTable"] th { padding: 12px 10px !important; }
+    [data-testid="stTable"] tr { border-bottom: 1px solid #F3F4F6 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -121,7 +127,6 @@ with tab1:
     with col_time:
         st.write("##### First Session Time")
         
-        # Adjusted column widths to better fit the shorter "Now" text
         col_btn, col_tz = st.columns([0.8, 1.2])
         with col_btn:
             st.button("🕒 Now", on_click=set_time_to_now)
@@ -179,7 +184,7 @@ with tab1:
             bring_back = current_time - timedelta(minutes=5)
             finish = current_time + timedelta(minutes=stim_dur) 
             
-            # HIGHLIGHTING LOGIC: Keeps the green highlight active for the whole current block
+            # HIGHLIGHTING LOGIC
             if i < sessions:
                 next_bring_back = current_time + timedelta(minutes=interval) - timedelta(minutes=5)
                 if bring_back <= local_now < next_bring_back:
@@ -188,10 +193,12 @@ with tab1:
                 if bring_back <= local_now <= finish:
                     active_idx = i - 1
             
-            # BANNER LOGIC: Scans for the absolute first session where local time is less than Start Time
+            # BANNER LOGIC
             if banner_msg == "" and local_now < current_time:
                 bb_text = f" {format_12h(bring_back)}" if i > 1 else ""
-                banner_msg = f"Next: Session {i}{bb_text}"
+                session_html = f'<span style="color: #845EF7; font-weight: 900;">Session {i}</span>'
+                time_html = f'<span style="color: #3B82F6; font-weight: 900;">{bb_text}</span>' if bb_text else ""
+                banner_msg = f"Next: {session_html}{time_html}"
             
             bring_back_str = "" if i == 1 else format_12h(bring_back)
             
@@ -213,22 +220,36 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
             
-        def highlight_active(x):
+        def highlight_custom_cells(x):
             df_style = pd.DataFrame('', index=x.index, columns=x.columns)
-            if active_idx != -1 and active_idx in x.index:
-                df_style.iloc[active_idx] = 'background-color: #E6FFFA; color: #00A389; font-weight: 800;'
+            for r in x.index:
+                for c in x.columns:
+                    style_str = ""
+                    # Apply green background for the active row
+                    if r == active_idx:
+                        style_str += "background-color: #E6FFFA; "
+                        if c == "Session":
+                            style_str += "color: #845EF7; font-weight: 900;" 
+                        else:
+                            style_str += "color: #00A389; font-weight: 800;" 
+                    # Regular rows
+                    else:
+                        if c == "Session":
+                            style_str += "color: #845EF7; font-weight: 800;" 
+                    df_style.at[r, c] = style_str
             return df_style
 
-        styled_df = pd.DataFrame(tracker_data).style.apply(highlight_active, axis=None)
+        # We append .hide(axis="index") to the end of the styler so the row numbers completely disappear
+        styled_df = pd.DataFrame(tracker_data).style.apply(highlight_custom_cells, axis=None).hide(axis="index")
         
-        st.dataframe(styled_df, width="stretch", hide_index=True)
+        # Swapped interactive st.dataframe for an un-editable, un-sortable st.table
+        st.table(styled_df)
         
         col_refresh, col_caption = st.columns([1, 2])
         with col_refresh:
             st.button("🔄 Refresh Highlight")
         with col_caption:
             st.caption("The current block is highlighted in green. The banner at the top updates the moment a session starts.")
-
 
 # ==========================================
 # TAB 2: PERCENTAGE CALCULATOR
@@ -260,4 +281,5 @@ with tab2:
             while current_pct <= end_pct:
                 data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
                 current_pct += step_pct
+            # The percentage calculator is left as an interactive dataframe so it can still stretch completely
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
