@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-import streamlit.components.v1 as components
 
 # ==========================================
 # PAGE CONFIGURATION & SESSION STATE
@@ -83,7 +82,7 @@ else:
         "btn_primary_bg": "#FF6B6B",
         "btn_primary_shadow": "#1E1E1E",
         "btn_primary_text": "#FFFFFF",
-        "btn_sec_shadow": "#4B5563",  # Darker Slate Gray Shadow for light mode!
+        "btn_sec_shadow": "#4B5563",
         "btn_sec_hover": "#F3F4F6",
         "active_config_bg": "#FFE66D",
         "active_config_text": "#1E1E1E",
@@ -120,7 +119,7 @@ st.markdown(f"""
         border-radius: 8px !important; border: 3px solid {theme['border']} !important;
         background-color: {theme['panel_bg']} !important; font-weight: 800 !important; color: {theme['text_header']} !important;
         box-shadow: 4px 4px 0px {theme['shadow_2']} !important; transition: all 0.1s ease !important;
-        padding-left: 2px !important; padding-right: 2px !important; /* Reduced padding to stop text cutoff */
+        padding-left: 2px !important; padding-right: 2px !important;
     }}
     
     /* Primary buttons (Generate, Now) */
@@ -195,8 +194,8 @@ st.markdown(f"""
         display: none !important; background-color: transparent !important; border: none !important; opacity: 0 !important; height: 0px !important; width: 0px !important; visibility: hidden !important;
     }}
     
-    /* 2. OVERRIDE STREAMLIT CLIPPING: Force all parent tab containers to show overflow */
-    div[data-testid="stTabs"], div[data-testid="stTabs"] > div, .stTabs [data-baseweb="tab-list"] {{ 
+    /* 2. NUCLEAR OVERRIDE: Destroy Streamlit's hidden clipping walls on all tab containers */
+    div[data-testid="stTabs"] * {{ 
         overflow: visible !important; 
     }}
     
@@ -205,28 +204,28 @@ st.markdown(f"""
         gap: 16px !important; padding-bottom: 15px !important; padding-left: 5px !important; padding-top: 5px !important;
     }}
     
-    /* 4. Target ONLY the explicit Tab buttons using the highly reliable data-testid */
-    button[data-testid="stTab"] {{ 
+    /* 4. Target ONLY the explicit Tab buttons using multiple robust selectors */
+    button[role="tab"], button[data-baseweb="tab"], button[data-testid="stTab"] {{ 
         background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
         padding: 8px 20px !important; box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; 
-        margin: 0px 8px 12px 0px !important; /* Critical margin to stop shadow from getting trapped */
-        min-width: fit-content !important; height: auto !important; overflow: visible !important;
+        margin: 0px 8px 12px 0px !important; 
+        min-width: fit-content !important; height: auto !important;
     }}
-    button[data-testid="stTab"]:hover {{ 
+    button[role="tab"]:hover, button[data-baseweb="tab"]:hover, button[data-testid="stTab"]:hover {{ 
         background-color: {theme['btn_sec_hover']} !important; 
     }}
     
     /* 5. The Active Tab - Press animation using transform */
-    button[data-testid="stTab"][aria-selected="true"] {{ 
+    button[role="tab"][aria-selected="true"], button[data-baseweb="tab"][aria-selected="true"], button[data-testid="stTab"][aria-selected="true"] {{ 
         background-color: {theme['btn_primary_bg']} !important; 
         box-shadow: 0px 0px 0px transparent !important; transform: translate(4px, 4px) !important; border-color: {theme['border']} !important;
     }}
     
     /* Force font styling natively on the headers */
-    button[data-testid="stTab"] p, button[data-testid="stTab"] span {{ 
+    button[role="tab"] p, button[role="tab"] span, button[data-testid="stTab"] p, button[data-testid="stTab"] span {{ 
         font-weight: 900 !important; color: {theme['text_main']} !important;
     }}
-    button[data-testid="stTab"][aria-selected="true"] p, button[data-testid="stTab"][aria-selected="true"] span {{ 
+    button[role="tab"][aria-selected="true"] p, button[role="tab"][aria-selected="true"] span, button[data-testid="stTab"][aria-selected="true"] p, button[data-testid="stTab"][aria-selected="true"] span {{ 
         color: {theme['btn_primary_text']} !important;
     }}
     
@@ -288,7 +287,6 @@ def format_12h(dt):
 with tab1:
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Widened left column from 1.2 to 1.6 to ensure internal dropdowns have plenty of pixel space
     col_left, col_right = st.columns([1.6, 2], gap="large")
     
     with col_left:
@@ -318,7 +316,6 @@ with tab1:
                 label_visibility="collapsed"
             )
         
-        # Increased widths for exact fit: PM dropdown gets the most room!
         t1, t2, t3 = st.columns([1, 1, 1.5])
         with t1:
             hour_val = st.selectbox("Hr", options=list(range(1, 13)), key="hour", label_visibility="collapsed")
@@ -348,7 +345,6 @@ with tab1:
     
     st.divider()
     
-    # Set vertical alignment to 'bottom' so all buttons snap to the exact same visual baseline
     col_gen, col_ref, col_cam, col_spacer = st.columns([3, 1, 1, 5], gap="small", vertical_alignment="bottom")
     
     with col_gen:
@@ -360,7 +356,6 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            # Container strictly matches the 48px height of adjacent Streamlit buttons for perfect alignment
             st.markdown(f"""
             <div style="display: flex; height: 48px; align-items: flex-end; justify-content: flex-start; padding-bottom: 0px;">
                 <a id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</a>
@@ -408,7 +403,6 @@ with tab1:
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
-        # Send the banner text back up the page to the global placeholder
         status_banner.markdown(f"""
         <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
             {banner_msg}
@@ -476,12 +470,11 @@ with tab2:
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
 
 # ==========================================
-# SILENT BACKEND DOM SCRIPT RUNNER (NO CONSOLE ERRORS)
+# SILENT BACKEND DOM SCRIPT RUNNER
 # ==========================================
-components.html("""
+st.html("""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-    // 1. Live Clock Runner
     setInterval(function() {
         const doc = window.parent.document;
         const d = doc.getElementById('dom-date');
@@ -493,7 +486,6 @@ components.html("""
         }
     }, 1000);
 
-    // 2. Camera Button Listener Runner
     function attachCamera() {
         const doc = window.parent.document;
         const btn = doc.getElementById('capture-btn');
@@ -526,4 +518,4 @@ components.html("""
     }
     attachCamera();
 </script>
-""", height=0, width=0)
+""")
