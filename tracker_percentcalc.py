@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-import streamlit.components.v1 as components
 
 # ==========================================
 # PAGE CONFIGURATION & SESSION STATE
@@ -178,35 +177,41 @@ st.markdown(f"""
        COMPLETELY CUSTOMIZED BRUTALIST UI TABS 
        ---------------------------------------------------- */
        
-    /* 1. Nuke ALL Streamlit native tab decorations safely */
-    [data-testid="stTabIndicator"], .stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"], .stTabs [data-testid="stTabBorder"] {{
-        display: none !important; background-color: transparent !important; border: none !important; opacity: 0 !important; height: 0px !important; width: 0px !important; visibility: hidden !important;
+    /* 1. Nuke ALL Streamlit native tab lines and wrappers */
+    div[data-testid="stTabIndicator"], 
+    .stTabs [data-baseweb="tab-highlight"], 
+    .stTabs [data-baseweb="tab-border"] {{
+        display: none !important; visibility: hidden !important; opacity: 0 !important;
     }}
     
-    /* 2. Give the list container gap spacing and ensure visible overflow */
+    /* 2. Override Streamlit's hidden overflow walls */
+    .stTabs, .stTabs > div, .stTabs [data-baseweb="tab-list"], .stTabs [data-baseweb="tab-list"] > div {{ 
+        overflow: visible !important; 
+    }}
+    
+    /* 3. Padding for the tab track */
     .stTabs [data-baseweb="tab-list"] {{ 
-        gap: 20px !important; padding-bottom: 15px !important; padding-left: 5px !important; padding-top: 5px !important; overflow: visible !important;
+        gap: 16px !important; padding-bottom: 20px !important; padding-top: 5px !important;
     }}
     
-    /* 3. The Tabs - Targeted specifically at the role='tab' button element */
-    .stTabs button[role="tab"], .stTabs button[data-baseweb="tab"] {{ 
+    /* 4. Target the generic buttons inside the tab component to guarantee the shadow renders */
+    .stTabs button {{ 
         background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
-        padding: 8px 20px !important; color: {theme['text_main']} !important; font-weight: 900 !important; font-size: 16px !important;
-        box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; 
-        margin: 0px 5px 8px 0px !important; /* Critical margin to stop shadow from getting trapped */
+        padding: 8px 20px !important; box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; 
+        margin: 0px 10px 12px 0px !important; /* Thick margins force the shadow to not be swallowed by the container */
         min-width: fit-content !important; height: auto !important; overflow: visible !important;
     }}
-    .stTabs button[role="tab"]:hover, .stTabs button[data-baseweb="tab"]:hover {{ 
-        background-color: {theme['btn_sec_hover']} !important; 
-    }}
+    .stTabs button:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
     
-    /* 4. The Active Tab - Press animation using transform */
-    .stTabs button[role="tab"][aria-selected="true"], .stTabs button[data-baseweb="tab"][aria-selected="true"] {{ 
-        background-color: {theme['btn_primary_bg']} !important; color: {theme['btn_primary_text']} !important;
+    /* 5. The Active Tab - Translate the button itself */
+    .stTabs button[aria-selected="true"] {{ 
+        background-color: {theme['btn_primary_bg']} !important; 
         box-shadow: 0px 0px 0px transparent !important; transform: translate(4px, 4px) !important; border-color: {theme['border']} !important;
     }}
     
-    .stTabs button[role="tab"] p, .stTabs button[role="tab"] span {{ font-weight: 900 !important; }}
+    /* Force exact bolding and colors on tab text */
+    .stTabs button p, .stTabs button span {{ font-weight: 900 !important; color: {theme['text_main']} !important; }}
+    .stTabs button[aria-selected="true"] p, .stTabs button[aria-selected="true"] span {{ color: {theme['btn_primary_text']} !important; }}
     
     /* ---------------------------------------------------- */
     
@@ -234,33 +239,39 @@ with col_toggle:
 
 
 # ==========================================
-# 2. CLOCK BANNER
+# 2. CLOCK BANNER (Uses Native st.html)
 # ==========================================
-components.html(f"""
+st.html(f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
-    body {{ margin: 0; padding: 5px; font-family: 'Nunito', sans-serif; background-color: transparent; }}
-    .banner {{
+    .neo-banner {{
         background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px;
         display: flex; justify-content: center; align-items: center; gap: 40px; 
-        border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']};
+        border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px;
     }}
-    .date {{ font-size: 18px; font-weight: 700; color: {theme['text_main']}; }}
-    .time {{ font-size: 22px; font-weight: 900; color: {theme['time_col']}; }}
+    .neo-date {{ font-size: 18px; font-weight: 700; color: {theme['text_main']}; }}
+    .neo-time {{ font-size: 22px; font-weight: 900; color: {theme['time_col']}; }}
 </style>
-<div class="banner">
-    <div class="date" id="date"></div>
-    <div class="time" id="time"></div>
+<div class="neo-banner">
+    <div class="neo-date" id="neo-date"></div>
+    <div class="neo-time" id="neo-time"></div>
 </div>
 <script>
-    function updateClock() {{
-        const now = new Date();
-        document.getElementById('date').innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
-        document.getElementById('time').innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
-    }}
-    setInterval(updateClock, 1000); updateClock();
+    (function() {{
+        function updateClock() {{
+            const now = new Date();
+            const doc = window.parent.document || document;
+            const dateEl = doc.getElementById('neo-date');
+            const timeEl = doc.getElementById('neo-time');
+            if (dateEl && timeEl) {{
+                dateEl.innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
+                timeEl.innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
+            }}
+        }}
+        setInterval(updateClock, 1000); 
+        updateClock();
+    }})();
 </script>
-""", height=90)
+""")
 
 
 # ==========================================
@@ -314,7 +325,6 @@ with tab1:
                 label_visibility="collapsed"
             )
         
-        # Adjusted the 3rd column (AM/PM) to [1, 1, 1.4] so "PM" doesn't get cut off!
         t1, t2, t3 = st.columns([1, 1, 1.4])
         with t1:
             hour_val = st.selectbox("Hr", options=list(range(1, 13)), key="hour", label_visibility="collapsed")
@@ -402,6 +412,7 @@ with tab1:
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
+        # Send the banner text back up the page to the global placeholder
         status_banner.markdown(f"""
         <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
             {banner_msg}
@@ -469,48 +480,60 @@ with tab2:
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
 
 # ==========================================
-# SILENT BACKEND DOM SCRIPT RUNNER (CAMERA CAPTURE LOGIC)
+# SILENT BACKEND DOM SCRIPT RUNNER (CAMERA LOGIC - Uses Native st.html)
 # ==========================================
 st.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-    function attachCameraEvent() {{
-        const parentDoc = window.parent.document || document;
-        const btn = parentDoc.getElementById('capture-btn');
-        
-        if (btn) {{
-            if (!btn.hasAttribute('data-attached')) {{
+    (function() {{
+        function attachCameraEvent() {{
+            const doc = window.parent.document || document;
+            const btn = doc.getElementById('capture-btn');
+            
+            if (btn && !btn.dataset.attached) {{
                 btn.addEventListener('click', function(e) {{
                     e.preventDefault();
-                    const target = parentDoc.querySelector('[data-testid="stTable"]');
-                    if (target) {{
-                        html2canvas(target, {{
-                            backgroundColor: '{theme["bg_color"]}', 
-                            scale: 2,
-                            onclone: function (clonedDoc) {{
-                                const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
-                                cells.forEach(cell => {{
-                                    cell.style.fontFamily = 'Arial, sans-serif';
-                                    cell.style.letterSpacing = 'normal';
-                                    cell.style.whiteSpace = 'nowrap';
-                                }});
-                            }}
-                        }}).then(canvas => {{
-                            const link = document.createElement('a');
-                            link.download = 'TMS_Schedule.png';
-                            link.href = canvas.toDataURL();
-                            link.click();
-                        }});
+                    
+                    function executeCapture() {{
+                        const target = doc.querySelector('[data-testid="stTable"]');
+                        if (target) {{
+                            html2canvas(target, {{
+                                backgroundColor: '{theme["bg_color"]}', 
+                                scale: 2,
+                                onclone: function (clonedDoc) {{
+                                    const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
+                                    cells.forEach(cell => {{
+                                        cell.style.fontFamily = 'Arial, sans-serif';
+                                        cell.style.letterSpacing = 'normal';
+                                        cell.style.whiteSpace = 'nowrap';
+                                    }});
+                                }}
+                            }}).then(canvas => {{
+                                const link = document.createElement('a');
+                                link.download = 'TMS_Schedule.png';
+                                link.href = canvas.toDataURL();
+                                link.click();
+                            }});
+                        }} else {{
+                            alert('Table not found.');
+                        }}
+                    }}
+
+                    if (typeof html2canvas === 'undefined') {{
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                        script.onload = executeCapture;
+                        (doc.head || document.head).appendChild(script);
                     }} else {{
-                        alert('Table not found.');
+                        executeCapture();
                     }}
                 }});
-                btn.setAttribute('data-attached', 'true');
+                btn.dataset.attached = 'true';
+            }} else if (!btn) {{
+                setTimeout(attachCameraEvent, 500);
             }}
-        }} else {{
-            setTimeout(attachCameraEvent, 500);
         }}
-    }}
-    attachCameraEvent();
+        attachCameraEvent();
+    }})();
 </script>
 """)
