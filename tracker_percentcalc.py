@@ -8,11 +8,9 @@ import streamlit.components.v1 as components
 # ==========================================
 st.set_page_config(page_title="TMS Tools", layout="centered", page_icon="🧰")
 
-# Initialize timezone offset first (Defaults to -6 for MDT)
 if "tz_offset" not in st.session_state:
     st.session_state.tz_offset = -6
 
-# Helper callback to set time dropdowns to current LOCAL time
 def set_time_to_now():
     utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
     local_now = utc_now + timedelta(hours=st.session_state.tz_offset)
@@ -20,7 +18,6 @@ def set_time_to_now():
     st.session_state.minute = f"{local_now.minute:02d}"
     st.session_state.ampm = local_now.strftime("%p")
 
-# Initialize session state variables 
 if "schedule_generated" not in st.session_state:
     st.session_state.schedule_generated = False
 
@@ -35,87 +32,78 @@ if "mode" not in st.session_state:
     st.session_state.mode = "MAGNETS"
 
 # ==========================================
-# PLAYGROUND THEME CSS
+# 80s RETRO-POP / NEO-BRUTALIST THEME CSS
 # ==========================================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
     html, body, [class*="css"] { font-family: 'Nunito', sans-serif !important; }
     
+    /* Inputs */
     .stTextInput > div > div > input, .stNumberInput > div > div > input, div[data-baseweb="select"] > div {
-        border-radius: 16px !important; border: 2px solid #FFE66D !important;
-        background-color: #FAFAFA !important; font-weight: 600 !important;
+        border-radius: 8px !important; border: 3px solid #1E1E1E !important;
+        background-color: #FAFAFA !important; font-weight: 800 !important;
+        box-shadow: 4px 4px 0px #FFE66D !important; transition: all 0.1s ease !important;
     }
     
     /* Primary buttons (Generate, Now) */
     button[kind="primary"] {
         background-color: #FF6B6B !important; color: white !important;
-        border-radius: 30px !important; font-weight: 800 !important; font-size: 16px !important;
-        border: none !important; padding: 4px 20px !important; height: 42px !important; margin: 0 !important;
-        box-shadow: 0 5px 0px #E63946 !important; transition: all 0.1s ease !important;
+        border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
+        border: 3px solid #1E1E1E !important; padding: 4px 20px !important; height: 42px !important; margin: 0 !important;
+        box-shadow: 4px 4px 0px #1E1E1E !important; transition: all 0.1s ease !important;
     }
-    button[kind="primary"]:active { transform: translateY(5px) !important; box-shadow: 0 0px 0px #E63946 !important; }
+    button[kind="primary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
     button[kind="primary"]:hover { background-color: #FF8787 !important; }
 
-    /* Secondary buttons (Refresh) made into cute circles */
+    /* Secondary buttons (Refresh) */
     button[kind="secondary"] {
-        background-color: transparent !important; color: #00A389 !important;
-        border: 2px solid #00A389 !important; border-radius: 50% !important;
-        width: 42px !important; height: 42px !important;
+        background-color: white !important; color: #1E1E1E !important;
+        border: 3px solid #1E1E1E !important; border-radius: 8px !important;
+        width: 42px !important; height: 42px !important; margin: 0 !important;
         padding: 0 !important; font-size: 20px !important;
-        box-shadow: 0 3px 0px #007A66 !important; transition: all 0.1s ease !important;
-        display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 !important;
+        box-shadow: 3px 3px 0px #1E1E1E !important; transition: all 0.1s ease !important;
+        display: flex !important; align-items: center !important; justify-content: center !important; 
     }
-    button[kind="secondary"]:active { transform: translateY(3px) !important; box-shadow: 0 0px 0px #007A66 !important; }
+    button[kind="secondary"]:active { transform: translate(3px, 3px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
     button[kind="secondary"]:hover { background-color: #E6FFFA !important; }
 
-    /* Camera HTML button styled exactly like secondary button */
-    .camera-btn {
-        background-color: transparent; color: #00A389; border: 2px solid #00A389; border-radius: 50%;
-        width: 42px; height: 42px; padding: 0; font-size: 20px; box-shadow: 0 3px 0px #007A66; 
-        transition: all 0.1s ease; display: flex; align-items: center; justify-content: center;
-        text-decoration: none; margin: 0;
-    }
-    .camera-btn:active { transform: translateY(3px); box-shadow: 0 0px 0px #007A66; }
-    .camera-btn:hover { background-color: #E6FFFA; }
-
+    /* Preset Info Boxes */
     div[data-testid="stAlert"] {
-        border-radius: 16px !important; background-color: #F0F9FF !important;
-        border: 2px dashed #4ECDC4 !important; color: #2D3748 !important; border-left: 2px dashed #4ECDC4 !important;
+        border-radius: 8px !important; background-color: #F0F9FF !important;
+        border: 3px solid #1E1E1E !important; color: #1E1E1E !important; 
+        box-shadow: 5px 5px 0px #4ECDC4 !important; font-weight: 800 !important;
     }
     
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-    .stTabs [data-baseweb="tab"] { border-radius: 16px 16px 0 0 !important; font-weight: 800 !important; padding: 10px 20px !important; }
+    .stTabs [data-baseweb="tab"] { border-radius: 12px 12px 0 0 !important; font-weight: 900 !important; padding: 10px 20px !important; }
     
-    /* Force white background for the table so the downloaded image looks clean */
-    [data-testid="stTable"] { background-color: white !important; padding: 10px; border-radius: 12px; }
-    [data-testid="stTable"] table { width: 100% !important; border-collapse: collapse !important; }
-    [data-testid="stTable"] th { background-color: #FAFAFA !important; border-bottom: 2px dashed #4ECDC4 !important; font-weight: 800 !important; }
-    [data-testid="stTable"] td, [data-testid="stTable"] th { padding: 12px 10px !important; }
-    [data-testid="stTable"] tr { border-bottom: 1px solid #F3F4F6 !important; }
-
-    /* Container injection styling to unify the banner */
-    div[data-testid="stHorizontalBlock"]:has(.banner-text-target) {
-        background-color: #E6FFFA; border: 2px dashed #00A389; border-radius: 12px;
-        padding: 8px 16px; align-items: center; margin-bottom: 15px; margin-top: -10px;
+    /* 80s Table Styling */
+    [data-testid="stTable"] { 
+        background-color: white !important; padding: 10px; border-radius: 8px; 
+        border: 3px solid #1E1E1E !important; box-shadow: 6px 6px 0px #FFE66D !important; margin-bottom: 20px;
     }
+    [data-testid="stTable"] table { width: 100% !important; border-collapse: collapse !important; }
+    [data-testid="stTable"] th { background-color: #FAFAFA !important; border-bottom: 3px solid #1E1E1E !important; font-weight: 900 !important; }
+    [data-testid="stTable"] td, [data-testid="stTable"] th { padding: 12px 10px !important; font-weight: 700; color: #1E1E1E; }
+    [data-testid="stTable"] tr { border-bottom: 2px solid #F3F4F6 !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# LIVE DATE/TIME BANNER
+# LIVE DATE/TIME BANNER (Centered & Solid)
 # ==========================================
 components.html("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap');
-    body { margin: 0; font-family: 'Nunito', sans-serif; background-color: transparent; }
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
+    body { margin: 0; padding: 5px; font-family: 'Nunito', sans-serif; background-color: transparent; }
     .banner {
-        background-color: #FAFAFA; border-radius: 16px; padding: 12px 20px;
-        display: flex; justify-content: space-between; align-items: center;
-        border: 2px dashed #4ECDC4; color: #2D3748;
+        background-color: #FAFAFA; border-radius: 8px; padding: 16px 20px;
+        display: flex; justify-content: center; align-items: center; gap: 40px; /* Centers text with a gap */
+        border: 3px solid #1E1E1E; color: #1E1E1E; box-shadow: 5px 5px 0px #FF6B6B;
     }
-    .date { font-size: 16px; font-weight: 600; color: #6B7280; }
-    .time { font-size: 20px; font-weight: 800; color: #FF6B6B; }
+    .date { font-size: 18px; font-weight: 700; color: #1E1E1E; }
+    .time { font-size: 22px; font-weight: 900; color: #845EF7; }
 </style>
 <div class="banner">
     <div class="date" id="date"></div>
@@ -129,7 +117,7 @@ components.html("""
     }
     setInterval(updateClock, 1000); updateClock();
 </script>
-""", height=70)
+""", height=90)
 
 status_banner = st.empty()
 
@@ -237,32 +225,12 @@ with tab1:
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
-        # Builds the banner with the Text taking most space, and the two emoji buttons hugging the right side
-        with status_banner.container():
-            col_text, col_ref, col_cam = st.columns([7, 0.7, 0.7])
-            
-            with col_text:
-                st.markdown(f"<div class='banner-text-target' style='color: #007A66; font-weight: 700; font-size: 16px; margin-top: 8px;'>{banner_msg}</div>", unsafe_allow_html=True)
-            
-            with col_ref:
-                st.button("🔄", key="refresh_banner", help="Refresh Highlight")
-                
-            with col_cam:
-                st.markdown("""
-                <a class="camera-btn" href="javascript:(function(){ 
-                    var script = document.createElement('script'); 
-                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; 
-                    script.onload = function(){ 
-                        html2canvas(document.querySelector('[data-testid=\\'stTable\\']')).then(canvas => { 
-                            var link = document.createElement('a'); 
-                            link.download = 'TMS_Schedule.png'; 
-                            link.href = canvas.toDataURL(); 
-                            link.click(); 
-                        }); 
-                    }; 
-                    document.head.appendChild(script); 
-                })()" title="Download Schedule Image">📷</a>
-                """, unsafe_allow_html=True)
+        # 80s Styled Next Session Banner (Centered Text)
+        status_banner.markdown(f"""
+        <div style="background-color: #E6FFFA; border: 3px solid #1E1E1E; box-shadow: 5px 5px 0px #00A389; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: #1E1E1E; font-weight: 800; text-align: center; font-size: 18px;">
+            {banner_msg}
+        </div>
+        """, unsafe_allow_html=True)
             
         def highlight_custom_cells(x):
             df_style = pd.DataFrame('', index=x.index, columns=x.columns)
@@ -274,17 +242,59 @@ with tab1:
                         if c == "Session":
                             style_str += "color: #845EF7; font-weight: 900;" 
                         else:
-                            style_str += "color: #00A389; font-weight: 800;" 
+                            style_str += "color: #00A389; font-weight: 900;" 
                     else:
                         if c == "Session":
-                            style_str += "color: #845EF7; font-weight: 800;" 
+                            style_str += "color: #845EF7; font-weight: 900;" 
                     df_style.at[r, c] = style_str
             return df_style
 
         styled_df = pd.DataFrame(tracker_data).style.apply(highlight_custom_cells, axis=None).hide(axis="index")
         
         st.table(styled_df)
-        st.caption("The current block is highlighted in green. The banner at the top updates the moment a session starts.")
+        
+        # Action Buttons below table
+        col_ref, col_cam, col_cap = st.columns([0.13, 0.13, 0.74])
+        with col_ref:
+            st.button("🔄", key="refresh_banner", help="Refresh Highlight")
+            
+        with col_cam:
+            # Custom component to properly execute html2canvas for taking a picture of the DOM
+            components.html("""
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+            <style>
+                body { margin: 0; padding: 0; }
+                .camera-btn {
+                    background-color: white; color: #1E1E1E; border: 3px solid #1E1E1E; border-radius: 8px;
+                    width: 42px; height: 42px; font-size: 20px; box-shadow: 3px 3px 0px #1E1E1E; 
+                    cursor: pointer; transition: all 0.1s ease; display: flex; align-items: center; justify-content: center;
+                }
+                .camera-btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px #1E1E1E; }
+            </style>
+            <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷</button>
+            <script>
+                function takePic() {
+                    try {
+                        const target = window.parent.document.querySelector('[data-testid="stTable"]');
+                        if (target) {
+                            html2canvas(target, {backgroundColor: '#ffffff', scale: 2}).then(canvas => {
+                                const link = document.createElement('a');
+                                link.download = 'TMS_Schedule.png';
+                                link.href = canvas.toDataURL();
+                                link.click();
+                            });
+                        } else {
+                            alert('Table not found.');
+                        }
+                    } catch (e) {
+                        alert('Browser security prevents capturing the image directly on the cloud. Please take a manual screenshot.');
+                    }
+                }
+            </script>
+            """, height=50)
+            
+        with col_cap:
+            st.caption("The current block is highlighted in green. The banner at the top updates the moment a session starts.")
 
 # ==========================================
 # TAB 2: PERCENTAGE CALCULATOR
