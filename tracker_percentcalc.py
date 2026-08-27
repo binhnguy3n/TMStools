@@ -170,9 +170,55 @@ st.markdown(f"""
         box-shadow: 5px 5px 0px {theme['shadow_1']} !important; font-weight: 800 !important;
     }}
     
-    .stTabs [data-baseweb="tab-list"] {{ gap: 10px; }}
-    .stTabs [data-baseweb="tab"] {{ border-radius: 12px 12px 0 0 !important; font-weight: 900 !important; padding: 10px 20px !important; background-color: transparent; }}
-    .stTabs [aria-selected="true"] {{ background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-bottom: none !important; }}
+    /* ----------------------------------------------------
+       COMPLETELY CUSTOMIZED BRUTALIST UI TABS 
+       ---------------------------------------------------- */
+       
+    /* 1. Destroy Streamlit's native blue lines and grey borders */
+    .stTabs [data-baseweb="tab-border"], 
+    .stTabs [data-baseweb="tab-highlight"] {{
+        display: none !important;
+        background-color: transparent !important;
+    }}
+    
+    /* 2. Style the container to give the shadow room */
+    .stTabs [data-baseweb="tab-list"] {{ 
+        gap: 16px !important; 
+        padding-bottom: 10px !important;
+    }}
+    
+    /* 3. The Inactive Tab (Pill Button) */
+    .stTabs [data-baseweb="tab"] {{ 
+        background-color: {theme['panel_bg']} !important;
+        border: 3px solid {theme['border']} !important;
+        border-radius: 8px !important;
+        padding: 10px 24px !important;
+        color: {theme['text_main']} !important;
+        font-weight: 900 !important;
+        font-size: 16px !important;
+        box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important;
+        transition: all 0.1s ease !important;
+        margin: 0 !important; 
+    }}
+    .stTabs [data-baseweb="tab"]:hover {{
+        background-color: {theme['btn_sec_hover']} !important;
+    }}
+    
+    /* 4. The Active Tab (Pressed down into the primary color) */
+    .stTabs [aria-selected="true"] {{ 
+        background-color: {theme['btn_primary_bg']} !important; 
+        color: {theme['btn_primary_text']} !important;
+        box-shadow: 0px 0px 0px transparent !important; 
+        transform: translate(4px, 4px) !important;
+        border-color: {theme['border']} !important;
+    }}
+    
+    /* Ensure emoji and text within tabs inherit the bold font */
+    .stTabs [data-baseweb="tab"] p, .stTabs [data-baseweb="tab"] span {{
+        font-weight: 900 !important;
+    }}
+    
+    /* ---------------------------------------------------- */
     
     /* 80s Table Styling */
     [data-testid="stTable"] {{ 
@@ -283,7 +329,6 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            # Fully Native Anchor tag for exact alignment, no iframes
             st.markdown("""
             <div style="display: flex; height: 42px; align-items: center;">
                 <a id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</a>
@@ -403,7 +448,6 @@ with tab2:
 components.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-    // 1. Unified Clock Logic (targets the native DOM elements)
     function updateClock() {{
         const now = new Date();
         const parentDoc = window.parent.document;
@@ -418,7 +462,6 @@ components.html(f"""
     setInterval(updateClock, 1000);
     updateClock();
     
-    // 2. Camera Button Logic (attaches event listener natively)
     function attachCameraEvent() {{
         const parentDoc = window.parent.document;
         const btn = parentDoc.getElementById('capture-btn');
