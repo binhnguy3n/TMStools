@@ -82,7 +82,7 @@ else:
         "btn_primary_bg": "#FF6B6B",
         "btn_primary_shadow": "#1E1E1E",
         "btn_primary_text": "#FFFFFF",
-        "btn_sec_shadow": "#374151",  # Dark Slate Gray Shadow
+        "btn_sec_shadow": "#374151",
         "btn_sec_hover": "#F3F4F6",
         "active_config_bg": "#FFE66D",
         "active_config_text": "#1E1E1E",
@@ -122,10 +122,10 @@ st.markdown(f"""
         padding-left: 2px !important; padding-right: 2px !important;
     }}
     
-    /* Stop Streamlit flexbox from stretching buttons */
+    /* Stop Streamlit flexbox from dynamically squishing/stretching buttons */
     div[data-testid="stButton"] {{ width: fit-content !important; }}
 
-    /* 1. PRIMARY BUTTONS (Generate, Now) */
+    /* Primary buttons (Generate, Now) */
     button[kind="primary"] {{
         background-color: {theme['btn_primary_bg']} !important; color: {theme['btn_primary_text']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
@@ -136,7 +136,7 @@ st.markdown(f"""
     button[kind="primary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="primary"]:hover {{ filter: brightness(1.1); }}
 
-    /* 2. SECONDARY BUTTONS (Theme Toggle) - Dynamic width for text */
+    /* Secondary buttons (Theme Toggle & Refresh/Camera Tooltips) */
     button[kind="secondary"] {{
         background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
@@ -147,7 +147,7 @@ st.markdown(f"""
     button[kind="secondary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="secondary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
 
-    /* 3. SECONDARY BUTTONS WITH TOOLTIPS (Refresh & Camera) - LOCKED 48x48 SQUARES */
+    /* Lock secondary buttons to perfect 48x48 squares IF they are inside a tooltip (Refresh/Camera) */
     div[data-testid="stTooltipHoverTarget"] button[kind="secondary"] {{
         font-size: 22px !important;
         width: 48px !important; min-width: 48px !important; max-width: 48px !important;
@@ -155,12 +155,12 @@ st.markdown(f"""
         display: flex !important; align-items: center !important; justify-content: center !important;
     }}
 
-    /* 4. TERTIARY BUTTONS (Config Modes) - SLIM, LOCKED 32x48 PILLS */
+    /* Tertiary buttons (Config Modes) - SLIM, LOCKED 32x48 PILLS */
     button[kind="tertiary"] {{
         background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 18px !important;
         border: 3px solid {theme['border']} !important; 
-        width: 32px !important; min-width: 32px !important; max-width: 32px !important; /* Slimmer horizontal profile! */
+        width: 32px !important; min-width: 32px !important; max-width: 32px !important;
         height: 48px !important; min-height: 48px !important; max-height: 48px !important; 
         padding: 0 !important; margin: 0 !important; box-sizing: border-box !important;
         box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important;
@@ -202,11 +202,11 @@ st.markdown(f"""
         gap: 16px !important; padding-bottom: 25px !important; padding-top: 5px !important;
     }}
     
-    /* 4. The Tab Headers - Targeted universally inside the tab list */
+    /* 4. The Tab Headers */
     div[data-testid="stTabs"] [data-baseweb="tab-list"] button {{ 
         background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
         padding: 8px 24px !important; box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; 
-        margin: 0px 8px 15px 0px !important; /* Critical margin ensures shadow renders */
+        margin: 0px 8px 15px 0px !important; 
         min-width: fit-content !important; height: auto !important; 
     }}
     div[data-testid="stTabs"] [data-baseweb="tab-list"] button:hover {{ 
@@ -250,7 +250,6 @@ with col_title:
 with col_toggle:
     st.markdown("<br>", unsafe_allow_html=True) 
     btn_text = "☀️ Light Mode" if is_synthwave else "🕶️ Synthwave"
-    # Assigned 'secondary', leaving it free to stretch horizontally to fit text!
     st.button(btn_text, on_click=toggle_theme, key="theme_btn", type="secondary")
 
 
@@ -278,7 +277,7 @@ status_banner = st.empty()
 # ==========================================
 # 4. TABS
 # ==========================================
-tab1, tab2 = st.tabs(["⏱️ Session Tracker", "📊 Percentage Calculator"])
+tab1, tab2, tab3 = st.tabs(["⏱️ Session Tracker", "📊 Percentage Calculator", "📚 Protocol Library"])
 
 def format_12h(dt):
     return dt.strftime("%I:%M %p").lstrip("0")
@@ -296,7 +295,6 @@ with tab1:
         st.write("##### Configuration Mode")
         mode = st.session_state.mode
         
-        # Grid set to [0.8, 0.8, 0.8, 3.5] to give the slim 32px buttons perfect equidistant spacing!
         col_m1, col_m2, col_m3, col_mspace = st.columns([0.8, 0.8, 0.8, 3.5], gap="small")
         with col_m1:
             st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset", type="tertiary")
@@ -349,7 +347,6 @@ with tab1:
     
     st.divider()
     
-    # Bottom alignment perfectly anchors the Generate button with the Refresh and Camera squares
     col_gen, col_ref, col_cam, col_spacer = st.columns([3, 1, 1, 5], gap="small", vertical_alignment="bottom")
     
     with col_gen:
@@ -358,11 +355,9 @@ with tab1:
             
     if st.session_state.schedule_generated:
         with col_ref:
-            # Type 'secondary' with a help tooltip locks this to a 48x48 square!
             st.button("🔄", help="Update the active highlight", type="secondary")
             
         with col_cam:
-            # Type 'secondary' with a help tooltip locks this to a 48x48 square!
             st.button("📷", key="cam_btn", type="secondary", help="Download Schedule Image")
             
         tracker_data = []
@@ -406,7 +401,6 @@ with tab1:
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
-        # Send the banner text back up the page to the global placeholder
         status_banner.markdown(f"""
         <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
             {banner_msg}
@@ -472,6 +466,82 @@ with tab2:
                 data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
                 current_pct += step_pct
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
+
+# ==========================================
+# TAB 3: PROTOCOL LIBRARY
+# ==========================================
+with tab3:
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.write("##### FDA-Cleared Protocols")
+    
+    st.markdown(f"""
+    <div style="background-color: {theme['panel_bg']}; border: 3px solid {theme['border']}; border-radius: 8px; padding: 20px; box-shadow: 5px 5px 0px {theme['shadow_1']}; margin-bottom: 20px;">
+        <h4 style="color: {theme['text_header']}; margin-top: 0; font-family: 'Nunito', sans-serif;">⏱️ Intermittent Theta Burst Stimulation (iTBS) for MDD</h4>
+        <p style="color: {theme['text_main']}; font-family: 'Nunito', sans-serif;"><strong>Target:</strong> Left Dorsolateral Prefrontal Cortex (DLPFC)<br>
+        <strong>Parameters:</strong> 50 Hz bursts delivered at 5 Hz, 120% rMT, 600 pulses over 3 minutes and 9 seconds. Non-inferior to standard 10Hz.</p>
+        <div style="background-color: {theme['bg_color']}; border: 2px solid {theme['border']}; border-radius: 6px; padding: 12px; font-size: 14px; color: {theme['text_main']}; font-family: 'Nunito', sans-serif;">
+            <strong>Citation:</strong> Blumberger, D. M., Vila-Rodriguez, F., Thorpe, K. E., et al. (2018). Effectiveness of theta burst versus high-frequency repetitive transcranial magnetic stimulation in patients with depression (THREE-D): a randomised non-inferiority trial. <em>The Lancet</em>, 391(10131), 1683-1692.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div style="background-color: {theme['panel_bg']}; border: 3px solid {theme['border']}; border-radius: 8px; padding: 20px; box-shadow: 5px 5px 0px {theme['shadow_1']}; margin-bottom: 20px;">
+        <h4 style="color: {theme['text_header']}; margin-top: 0; font-family: 'Nunito', sans-serif;">⚡ Standard 10 Hz rTMS for MDD</h4>
+        <p style="color: {theme['text_main']}; font-family: 'Nunito', sans-serif;"><strong>Target:</strong> Left Dorsolateral Prefrontal Cortex (DLPFC)<br>
+        <strong>Parameters:</strong> 10 Hz frequency, 120% rMT, 3000 pulses over 37.5 minutes. The foundational FDA-cleared protocol.</p>
+        <div style="background-color: {theme['bg_color']}; border: 2px solid {theme['border']}; border-radius: 6px; padding: 12px; font-size: 14px; color: {theme['text_main']}; font-family: 'Nunito', sans-serif;">
+            <strong>Citation:</strong> O'Reardon, J. P., Solvason, H. B., Janicak, P. G., et al. (2007). Efficacy and safety of transcranial magnetic stimulation in the acute treatment of major depression: a multisite randomized controlled trial. <em>Biological Psychiatry</em>, 62(11), 1208-1216.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div style="background-color: {theme['panel_bg']}; border: 3px solid {theme['border']}; border-radius: 8px; padding: 20px; box-shadow: 5px 5px 0px {theme['shadow_1']}; margin-bottom: 20px;">
+        <h4 style="color: {theme['text_header']}; margin-top: 0; font-family: 'Nunito', sans-serif;">🚀 Stanford Neuromodulation Therapy (SNT / SAINT)</h4>
+        <p style="color: {theme['text_main']}; font-family: 'Nunito', sans-serif;"><strong>Target:</strong> Left DLPFC (Personalized via resting-state functional connectivity MRI)<br>
+        <strong>Parameters:</strong> 10 sessions of iTBS per day (1800 pulses/session) at 90% rMT (depth-adjusted) for 5 consecutive days. 90,000 pulses total.</p>
+        <div style="background-color: {theme['bg_color']}; border: 2px solid {theme['border']}; border-radius: 6px; padding: 12px; font-size: 14px; color: {theme['text_main']}; font-family: 'Nunito', sans-serif;">
+            <strong>Citation:</strong> Cole, E. J., Phillips, A. L., Bentzley, B. S., et al. (2022). Stanford Neuromodulation Therapy (SNT): A Double-Blind Randomized Controlled Trial. <em>American Journal of Psychiatry</em>, 179(2), 132-141.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"""
+    <div style="background-color: {theme['panel_bg']}; border: 3px solid {theme['border']}; border-radius: 8px; padding: 20px; box-shadow: 5px 5px 0px {theme['shadow_1']}; margin-bottom: 20px;">
+        <h4 style="color: {theme['text_header']}; margin-top: 0; font-family: 'Nunito', sans-serif;">🧠 Deep TMS for Obsessive-Compulsive Disorder (OCD)</h4>
+        <p style="color: {theme['text_main']}; font-family: 'Nunito', sans-serif;"><strong>Target:</strong> Medial Prefrontal Cortex (mPFC) and Anterior Cingulate Cortex (ACC) via H7 Coil<br>
+        <strong>Parameters:</strong> 20 Hz frequency, 100% rMT for leg motor cortex, 2000 pulses per session, preceded by personalized symptom provocation.</p>
+        <div style="background-color: {theme['bg_color']}; border: 2px solid {theme['border']}; border-radius: 6px; padding: 12px; font-size: 14px; color: {theme['text_main']}; font-family: 'Nunito', sans-serif;">
+            <strong>Citation:</strong> Carmi, L., Tendler, A., Bystritsky, A., et al. (2019). Efficacy and Safety of Deep Transcranial Magnetic Stimulation for Obsessive-Compulsive Disorder: A Prospective Multicenter Randomized Double-Blind Placebo-Controlled Trial. <em>American Journal of Psychiatry</em>, 176(11), 931-938.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"""
+    <div style="background-color: {theme['panel_bg']}; border: 3px solid {theme['border']}; border-radius: 8px; padding: 20px; box-shadow: 5px 5px 0px {theme['shadow_1']}; margin-bottom: 40px;">
+        <h4 style="color: {theme['text_header']}; margin-top: 0; font-family: 'Nunito', sans-serif;">🚬 Deep TMS for Smoking Cessation</h4>
+        <p style="color: {theme['text_main']}; font-family: 'Nunito', sans-serif;"><strong>Target:</strong> Bilateral Lateral Prefrontal Cortex and Insula via H4 Coil<br>
+        <strong>Parameters:</strong> 10 Hz frequency, 120% rMT, 1800 pulses per session, preceded by smoking cue provocation.</p>
+        <div style="background-color: {theme['bg_color']}; border: 2px solid {theme['border']}; border-radius: 6px; padding: 12px; font-size: 14px; color: {theme['text_main']}; font-family: 'Nunito', sans-serif;">
+            <strong>Citation:</strong> Dinur-Klein, L., Dannon, P., Hadar, A., et al. (2014). Smoking cessation induced by deep repetitive transcranial magnetic stimulation of the prefrontal and insular cortices: a prospective, randomized controlled trial. <em>Biological Psychiatry</em>, 76(9), 742-749.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.write("##### Prominent Research & Experimental Protocols")
+    
+    st.markdown(f"""
+    <div style="background-color: {theme['panel_bg']}; border: 3px solid {theme['border']}; border-radius: 8px; padding: 20px; box-shadow: 5px 5px 0px {theme['shadow_2']}; margin-bottom: 20px;">
+        <h4 style="color: {theme['text_header']}; margin-top: 0; font-family: 'Nunito', sans-serif;">🐢 Low-Frequency 1 Hz rTMS for MDD</h4>
+        <p style="color: {theme['text_main']}; font-family: 'Nunito', sans-serif;"><strong>Target:</strong> Right Dorsolateral Prefrontal Cortex (DLPFC)<br>
+        <strong>Parameters:</strong> 1 Hz frequency, typically 110-120% rMT. Used as an inhibitory protocol for patients who cannot tolerate high-frequency left-sided stimulation.</p>
+        <div style="background-color: {theme['bg_color']}; border: 2px solid {theme['border']}; border-radius: 6px; padding: 12px; font-size: 14px; color: {theme['text_main']}; font-family: 'Nunito', sans-serif;">
+            <strong>Citation:</strong> Fitzgerald, P. B., Brown, T. L., Marston, N. A., et al. (2003). Transcranial magnetic stimulation in the treatment of depression: a double-blind, placebo-controlled trial. <em>Archives of General Psychiatry</em>, 60(11), 1002-1008.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 
 # ==========================================
 # SILENT BACKEND DOM SCRIPT RUNNER (CAMERA INTEGRATION)
