@@ -13,7 +13,6 @@ if "tz_offset" not in st.session_state:
 if "synthwave_toggle" not in st.session_state:
     st.session_state.synthwave_toggle = False
 
-# Initializes safely to prevent terminal warnings!
 if "known_val_input" not in st.session_state:
     st.session_state.known_val_input = 0.0
 
@@ -72,10 +71,13 @@ if is_synthwave:
         "zebra_bg": "#0e1017",
         "session_col": "#FF2A6D",
         "time_col": "#05D9E8",
+        "clock_time_col": "#00FF9D",   # Neon Green for the Clock!
         "next_banner_bg": "#151821",
         "next_banner_border": "#05D9E8",
         "next_banner_shadow": "#FF2A6D",
-        "clock_shadow": "#FF2A6D"
+        "disabled_bg": "#CCFFEA",      # Light green box background
+        "disabled_text": "#023020",    # Dark green text
+        "disabled_border": "#00FF9D"   # Neon green border
     }
 else:
     theme = {
@@ -98,10 +100,13 @@ else:
         "zebra_bg": "#F3F4F6",
         "session_col": "#845EF7",
         "time_col": "#3B82F6",
+        "clock_time_col": "#845EF7",   # Royal Purple for the Clock!
         "next_banner_bg": "#E6FFFA",
         "next_banner_border": "#1E1E1E",
         "next_banner_shadow": "#00A389",
-        "clock_shadow": "#FF6B6B"
+        "disabled_bg": "#D1FAE5",      # Light green box background
+        "disabled_text": "#064E3B",    # Dark forest green text
+        "disabled_border": "#059669"   # Standard green border
     }
 
 # ==========================================
@@ -129,23 +134,23 @@ st.markdown(f"""
         padding-left: 2px !important; padding-right: 2px !important;
     }}
     
-    /* Highlighted Disabled Input (For the RMT 120% Target Box) */
+    /* Highlighted Disabled Input (The Light Green RMT 120% Target Box) */
     input:disabled, div[data-baseweb="input"] input:disabled {{
-        background-color: {theme['active_config_bg']} !important;
-        color: {theme['active_config_text']} !important;
-        -webkit-text-fill-color: {theme['active_config_text']} !important;
+        background-color: {theme['disabled_bg']} !important;
+        color: {theme['disabled_text']} !important;
+        -webkit-text-fill-color: {theme['disabled_text']} !important;
         opacity: 1 !important;
         cursor: copy !important;
-        border: 3px solid {theme['shadow_1']} !important;
+        border: 3px dashed {theme['disabled_border']} !important;
         font-weight: 900 !important;
-        font-size: 18px !important;
-        box-shadow: 4px 4px 0px {theme['shadow_1']} !important;
+        font-size: 20px !important;
+        box-shadow: 4px 4px 0px {theme['disabled_border']} !important;
     }}
     
     /* Stop Streamlit flexbox from dynamically squishing/stretching buttons */
     div[data-testid="stButton"] {{ width: fit-content !important; }}
 
-    /* Primary buttons (Generate, Now, Use Value) */
+    /* Primary buttons (Generate, Now) */
     button[kind="primary"] {{
         background-color: {theme['btn_primary_bg']} !important; color: {theme['btn_primary_text']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
@@ -155,6 +160,18 @@ st.markdown(f"""
     }}
     button[kind="primary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="primary"]:hover {{ filter: brightness(1.1); }}
+
+    /* Surgical targeting to make ONLY the "Use Value" primary button Yellow */
+    div[data-testid="column"]:nth-of-type(3) button[kind="primary"] {{
+        background-color: #FFD700 !important; 
+        color: #000000 !important;
+        border-color: {theme['border']} !important;
+        box-shadow: 4px 4px 0px {theme['shadow_2']} !important;
+    }}
+    div[data-testid="column"]:nth-of-type(3) button[kind="primary"]:hover {{
+        filter: brightness(1.1) !important;
+        background-color: #FFD700 !important;
+    }}
 
     /* Secondary buttons (Theme Toggle ONLY) -> Keeps text wide dynamically */
     button[kind="secondary"] {{
@@ -249,7 +266,7 @@ st.markdown(f"""
     
     /* ---------------------------------------------------- */
     
-    /* 80s Table Styling */
+    /* 80s Table Styling (Applies to both Session Tracker & Percent Calc!) */
     [data-testid="stTable"] {{ 
         background-color: {theme['panel_bg']} !important; padding: 10px; border-radius: 8px; 
         border: 3px solid {theme['border']} !important; box-shadow: 6px 6px 0px {theme['shadow_2']} !important; margin-bottom: 20px;
@@ -278,12 +295,13 @@ with col_toggle:
 # ==========================================
 clock_now = datetime.now(timezone.utc) + timedelta(hours=st.session_state.tz_offset)
 current_date_str = clock_now.strftime("%A, %B %d, %Y")
-current_time_str = clock_now.strftime("%I:%M %p").lstrip("0")
+# Includes the seconds directly in the backup Python rendering!
+current_time_str = clock_now.strftime("%I:%M:%S %p").lstrip("0")
 
 st.markdown(f"""
 <div style="background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px; display: flex; justify-content: center; align-items: center; gap: 40px; border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px; font-family: 'Nunito', sans-serif;">
     <div style="font-size: 18px; font-weight: 700; color: {theme['text_main']};">{current_date_str}</div>
-    <div style="font-size: 22px; font-weight: 900; color: {theme['time_col']};">{current_time_str}</div>
+    <div style="font-size: 22px; font-weight: 900; color: {theme['clock_time_col']};" id="python-time">{current_time_str}</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -367,7 +385,6 @@ with tab1:
     
     st.divider()
     
-    # Ratios adjusted to firmly lock the buttons apart from each other without overlapping
     col_gen, col_ref, col_cam, col_spacer = st.columns([2.5, 1, 1, 5], gap="medium", vertical_alignment="bottom")
     
     with col_gen:
@@ -467,12 +484,12 @@ with tab2:
     with rmt_col1:
         rmt_val = st.number_input("Resting Motor Threshold (RMT)", min_value=0.0, value=0.0, step=1.0)
     
-    target_120 = rmt_val * 1.2
+    # Mathematical rounding rule applied directly to the RMT output!
+    target_120 = int(round(rmt_val * 1.2))
     
     with rmt_col2:
-        st.text_input("120% Target Output", value=f"{target_120:.1f}", disabled=True)
+        st.text_input("120% Target Output", value=f"{target_120}", disabled=True)
     with rmt_col3:
-        # Changed text to just the emoji!
         st.button("⬇️", on_click=auto_populate_known_val, args=(target_120,), type="primary", help="Use 120% Target Value")
 
     st.divider()
@@ -481,8 +498,6 @@ with tab2:
     with col_a:
         st.write("##### 1. Known Values")
         known_pct = st.number_input("Known Percentage (%)", min_value=0.1, value=120.0, step=1.0)
-        
-        # Removed value= assignment. Widget securely binds to session state directly!
         known_val = st.number_input("Known Value", step=1.0, key="known_val_input")
         
     with col_b:
@@ -606,11 +621,23 @@ with tab3:
     """, unsafe_allow_html=True)
 
 # ==========================================
-# SILENT BACKEND DOM SCRIPT RUNNER (CAMERA INTEGRATION)
+# SILENT BACKEND DOM SCRIPT RUNNER (CLOCK & CAMERA)
 # ==========================================
 st.html(f"""
 <script>
     (function() {{
+        // Live Clock logic matching Python seconds string format!
+        function updateClock() {{
+            const doc = window.parent.document || document;
+            const d = doc.getElementById('python-time');
+            if (d) {{
+                const now = new Date();
+                d.innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
+            }}
+        }}
+        setInterval(updateClock, 1000);
+
+        // Camera Logic
         function attachCamera() {{
             let doc = document;
             try {{ doc = window.parent.document || document; }} catch(e) {{}}
