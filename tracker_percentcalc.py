@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, timezone
+import streamlit.components.v1 as components  # Restored this missing import!
 
 # ==========================================
 # PAGE CONFIGURATION & SESSION STATE
@@ -356,7 +357,6 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            # Replaced iframe block with identical Native HTML element to perfectly match the adjacent st.button container height
             st.html(f"""
             <div style="display: flex; height: 48px; align-items: flex-start; justify-content: flex-start;">
                 <a id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</a>
