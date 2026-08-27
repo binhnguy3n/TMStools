@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-import streamlit.components.v1 as components  # Restored this missing import!
+import streamlit.components.v1 as components
 
 # ==========================================
 # PAGE CONFIGURATION & SESSION STATE
@@ -140,7 +140,7 @@ st.markdown(f"""
         opacity: 1 !important; cursor: default !important; border-color: {theme['border']} !important;
     }}
 
-    /* Tertiary buttons (Refresh icon) - Perfectly matched to Camera */
+    /* Tertiary buttons (Refresh icon) */
     button[kind="tertiary"] {{
         background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 22px !important;
@@ -178,34 +178,30 @@ st.markdown(f"""
        COMPLETELY CUSTOMIZED BRUTALIST UI TABS 
        ---------------------------------------------------- */
        
-    /* 1. Nuke ALL Streamlit native tab decorations safely */
+    /* Nuke Streamlit's native blue underline elements */
     [data-testid="stTabIndicator"], .stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"], .stTabs [data-testid="stTabBorder"] {{
         display: none !important; background-color: transparent !important; border: none !important; opacity: 0 !important; height: 0px !important; width: 0px !important; visibility: hidden !important;
     }}
     
-    /* 2. OVERRIDE STREAMLIT CLIPPING: Force all parent tab containers to show overflow */
-    .stTabs, .stTabs > div, .stTabs [data-baseweb="tab-list"] {{ 
-        overflow: visible !important; 
-    }}
-    
-    /* 3. Give the list container extreme bottom padding so the shadow renders safely */
+    /* Give the list container gap spacing */
     .stTabs [data-baseweb="tab-list"] {{ 
-        gap: 16px !important; padding-bottom: 20px !important; margin-bottom: -5px !important;
+        gap: 16px !important; overflow: visible !important; padding-top: 5px !important;
     }}
     
-    /* 4. The Tabs */
+    /* The Tabs - Added margin-bottom to physically reserve space for the shadow! */
     .stTabs [data-baseweb="tab"] {{ 
         background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
         padding: 8px 20px !important; color: {theme['text_main']} !important; font-weight: 900 !important; font-size: 16px !important;
-        box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; margin: 0 !important; min-width: fit-content !important; height: auto !important;
+        box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; 
+        margin: 0px 4px 8px 0px !important; /* Critical fix for un-hiding shadows */
+        min-width: fit-content !important; height: auto !important;
     }}
     .stTabs [data-baseweb="tab"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
     
-    /* 5. The Active Tab - Press animation using transform */
+    /* The Active Tab */
     .stTabs [aria-selected="true"] {{ 
         background-color: {theme['btn_primary_bg']} !important; color: {theme['btn_primary_text']} !important;
-        box-shadow: 0px 0px 0px transparent !important; border-color: {theme['border']} !important;
-        transform: translate(4px, 4px) !important; 
+        box-shadow: 0px 0px 0px transparent !important; transform: translate(4px, 4px) !important; border-color: {theme['border']} !important;
     }}
     .stTabs [data-baseweb="tab"] p, .stTabs [data-baseweb="tab"] span {{ font-weight: 900 !important; }}
     
@@ -285,14 +281,15 @@ def format_12h(dt):
 with tab1:
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Restructured Grid Layout: Left Column (Controls) vs Right Column (Info Box)
+    # Left Column (Controls) vs Right Column (Info Box)
     col_left, col_right = st.columns([1.2, 2], gap="large")
     
     with col_left:
         st.write("##### Configuration Mode")
         mode = st.session_state.mode
         
-        col_m1, col_m2, col_m3, col_mspace = st.columns([1, 1, 1, 8], gap="small")
+        # Widened these columns significantly so the 48px buttons have room to breathe and not overlap!
+        col_m1, col_m2, col_m3, col_mspace = st.columns([1, 1, 1, 3], gap="small")
         with col_m1:
             st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset")
         with col_m2:
@@ -303,7 +300,7 @@ with tab1:
         st.markdown("<br>", unsafe_allow_html=True)
         
         st.write("##### Initial Start Time")
-        col_btn, col_tz = st.columns([0.8, 1.2], gap="small")
+        col_btn, col_tz = st.columns([1, 1.5], gap="small")
         with col_btn:
             st.button("🕒 Now", on_click=set_time_to_now, type="primary")
         with col_tz:
@@ -328,7 +325,6 @@ with tab1:
         start_dt = datetime.combine(datetime.today(), start_time_obj)
         
     with col_right:
-        # Invisible spacer to perfectly vertical-align the info box with the configuration mode buttons
         st.markdown("<div style='height: 38px;'></div>", unsafe_allow_html=True)
         
         if mode == "MAGNETS":
@@ -345,8 +341,8 @@ with tab1:
     
     st.divider()
     
-    # Action Buttons aligned with exact widths
-    col_gen, col_ref, col_cam, col_spacer = st.columns([3.5, 0.8, 1.5, 10.0], gap="small")
+    # Adjusted ratios to give the Refresh and Camera columns far more horizontal pixel width so they don't squish
+    col_gen, col_ref, col_cam, col_spacer = st.columns([3, 1, 1, 5], gap="small")
     
     with col_gen:
         if st.button("Generate Schedule", type="primary"):
@@ -357,8 +353,9 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
+            # Expanded wrapper container to 56px to guarantee the 48px button's shadow does not get clipped internally
             st.html(f"""
-            <div style="display: flex; height: 48px; align-items: flex-start; justify-content: flex-start;">
+            <div style="display: flex; width: 56px; height: 56px; align-items: flex-start; justify-content: flex-start;">
                 <a id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</a>
             </div>
             """)
