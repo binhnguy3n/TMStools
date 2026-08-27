@@ -13,6 +13,7 @@ if "tz_offset" not in st.session_state:
 if "synthwave_toggle" not in st.session_state:
     st.session_state.synthwave_toggle = False
 
+# Initializes safely to prevent terminal warnings!
 if "known_val_input" not in st.session_state:
     st.session_state.known_val_input = 0.0
 
@@ -130,13 +131,14 @@ st.markdown(f"""
     
     /* Highlighted Disabled Input (For the RMT 120% Target Box) */
     input:disabled, div[data-baseweb="input"] input:disabled {{
-        background-color: {theme['active_row_bg']} !important;
-        color: {theme['active_row_text']} !important;
-        -webkit-text-fill-color: {theme['active_row_text']} !important;
+        background-color: {theme['active_config_bg']} !important;
+        color: {theme['active_config_text']} !important;
+        -webkit-text-fill-color: {theme['active_config_text']} !important;
         opacity: 1 !important;
         cursor: copy !important;
-        border: 3px dashed {theme['border']} !important;
+        border: 3px solid {theme['shadow_1']} !important;
         font-weight: 900 !important;
+        font-size: 18px !important;
         box-shadow: 4px 4px 0px {theme['shadow_1']} !important;
     }}
     
@@ -247,7 +249,7 @@ st.markdown(f"""
     
     /* ---------------------------------------------------- */
     
-    /* 80s Table Styling (Applies to both Session Tracker & Percent Calc!) */
+    /* 80s Table Styling */
     [data-testid="stTable"] {{ 
         background-color: {theme['panel_bg']} !important; padding: 10px; border-radius: 8px; 
         border: 3px solid {theme['border']} !important; box-shadow: 6px 6px 0px {theme['shadow_2']} !important; margin-bottom: 20px;
@@ -365,8 +367,8 @@ with tab1:
     
     st.divider()
     
-    # Aggressively tuned column grid pulls the action buttons tight to the generate button!
-    col_gen, col_ref, col_cam, col_spacer = st.columns([18, 5, 5, 50], gap="small", vertical_alignment="bottom")
+    # Ratios adjusted to firmly lock the buttons apart from each other without overlapping
+    col_gen, col_ref, col_cam, col_spacer = st.columns([2.5, 1, 1, 5], gap="medium", vertical_alignment="bottom")
     
     with col_gen:
         if st.button("Generate Schedule", type="primary"):
@@ -465,14 +467,13 @@ with tab2:
     with rmt_col1:
         rmt_val = st.number_input("Resting Motor Threshold (RMT)", min_value=0.0, value=0.0, step=1.0)
     
-    # Calculate Live
     target_120 = rmt_val * 1.2
     
     with rmt_col2:
         st.text_input("120% Target Output", value=f"{target_120:.1f}", disabled=True)
     with rmt_col3:
-        # Button overwrites the known_val input box instantaneously!
-        st.button("⬇️ Use Value", on_click=auto_populate_known_val, args=(target_120,), type="primary")
+        # Changed text to just the emoji!
+        st.button("⬇️", on_click=auto_populate_known_val, args=(target_120,), type="primary", help="Use 120% Target Value")
 
     st.divider()
     
@@ -480,7 +481,10 @@ with tab2:
     with col_a:
         st.write("##### 1. Known Values")
         known_pct = st.number_input("Known Percentage (%)", min_value=0.1, value=120.0, step=1.0)
-        known_val = st.number_input("Known Value", value=st.session_state.known_val_input, step=1.0, key="known_val_input")
+        
+        # Removed value= assignment. Widget securely binds to session state directly!
+        known_val = st.number_input("Known Value", step=1.0, key="known_val_input")
+        
     with col_b:
         st.write("##### 2. Table Settings")
         start_pct = st.number_input("Start Percentage (%)", value=30.0, step=1.0)
