@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-import streamlit.components.v1 as components
 
 # ==========================================
 # PAGE CONFIGURATION & SESSION STATE
@@ -174,17 +173,20 @@ st.markdown(f"""
        COMPLETELY CUSTOMIZED BRUTALIST UI TABS 
        ---------------------------------------------------- */
        
-    /* 1. Destroy Streamlit's native blue lines and grey borders */
+    /* 1. Nuke Streamlit's native blue lines and grey borders entirely */
     .stTabs [data-baseweb="tab-border"], 
     .stTabs [data-baseweb="tab-highlight"] {{
         display: none !important;
         background-color: transparent !important;
+        height: 0 !important; width: 0 !important;
     }}
     
-    /* 2. Style the container to give the shadow room */
+    /* 2. Style the container to give the shadow room so it doesn't clip */
     .stTabs [data-baseweb="tab-list"] {{ 
         gap: 16px !important; 
-        padding-bottom: 10px !important;
+        padding-bottom: 12px !important; 
+        padding-right: 12px !important;
+        padding-top: 4px !important;
     }}
     
     /* 3. The Inactive Tab (Pill Button) */
@@ -204,12 +206,11 @@ st.markdown(f"""
         background-color: {theme['btn_sec_hover']} !important;
     }}
     
-    /* 4. The Active Tab (Pressed down into the primary color) */
+    /* 4. The Active Tab - Removed the translation shift so it no longer clips! */
     .stTabs [aria-selected="true"] {{ 
         background-color: {theme['btn_primary_bg']} !important; 
         color: {theme['btn_primary_text']} !important;
-        box-shadow: 0px 0px 0px transparent !important; 
-        transform: translate(4px, 4px) !important;
+        box-shadow: 4px 4px 0px {theme['btn_primary_shadow']} !important; 
         border-color: {theme['border']} !important;
     }}
     
@@ -443,14 +444,15 @@ with tab2:
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
 
 # ==========================================
-# SILENT BACKEND DOM SCRIPT RUNNER
+# SILENT BACKEND DOM SCRIPT RUNNER (REPLACED COMPONENTS API)
 # ==========================================
-components.html(f"""
+st.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
+    // Clock Logic
     function updateClock() {{
         const now = new Date();
-        const parentDoc = window.parent.document;
+        const parentDoc = window.parent.document || document;
         const dateEl = parentDoc.getElementById('dom-date');
         const timeEl = parentDoc.getElementById('dom-time');
         
@@ -462,8 +464,9 @@ components.html(f"""
     setInterval(updateClock, 1000);
     updateClock();
     
+    // Camera Logic
     function attachCameraEvent() {{
-        const parentDoc = window.parent.document;
+        const parentDoc = window.parent.document || document;
         const btn = parentDoc.getElementById('capture-btn');
         
         if (btn) {{
@@ -501,4 +504,4 @@ components.html(f"""
     }}
     attachCameraEvent();
 </script>
-""", height=0, width=0)
+""")
