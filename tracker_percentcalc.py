@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, timezone
+import streamlit.components.v1 as components
 
 # ==========================================
 # PAGE CONFIGURATION & SESSION STATE
@@ -82,7 +83,7 @@ else:
         "btn_primary_bg": "#FF6B6B",
         "btn_primary_shadow": "#1E1E1E",
         "btn_primary_text": "#FFFFFF",
-        "btn_sec_shadow": "#9CA3AF",
+        "btn_sec_shadow": "#4B5563",  # Darker Slate Gray Shadow for light mode!
         "btn_sec_hover": "#F3F4F6",
         "active_config_bg": "#FFE66D",
         "active_config_text": "#1E1E1E",
@@ -119,7 +120,7 @@ st.markdown(f"""
         border-radius: 8px !important; border: 3px solid {theme['border']} !important;
         background-color: {theme['panel_bg']} !important; font-weight: 800 !important; color: {theme['text_header']} !important;
         box-shadow: 4px 4px 0px {theme['shadow_2']} !important; transition: all 0.1s ease !important;
-        padding-left: 6px !important; padding-right: 6px !important;
+        padding-left: 2px !important; padding-right: 2px !important; /* Reduced padding to stop text cutoff */
     }}
     
     /* Primary buttons (Generate, Now) */
@@ -195,7 +196,7 @@ st.markdown(f"""
     }}
     
     /* 2. OVERRIDE STREAMLIT CLIPPING: Force all parent tab containers to show overflow */
-    .stTabs, .stTabs > div, .stTabs [data-baseweb="tab-list"] {{ 
+    div[data-testid="stTabs"], div[data-testid="stTabs"] > div, .stTabs [data-baseweb="tab-list"] {{ 
         overflow: visible !important; 
     }}
     
@@ -204,28 +205,28 @@ st.markdown(f"""
         gap: 16px !important; padding-bottom: 15px !important; padding-left: 5px !important; padding-top: 5px !important;
     }}
     
-    /* 4. Target ONLY the buttons inside the Tab Header container */
-    .stTabs [data-baseweb="tab-list"] button {{ 
+    /* 4. Target ONLY the explicit Tab buttons using the highly reliable data-testid */
+    button[data-testid="stTab"] {{ 
         background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
         padding: 8px 20px !important; box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; 
-        margin: 0px 5px 8px 0px !important; /* Critical margin to stop shadow from getting trapped */
+        margin: 0px 8px 12px 0px !important; /* Critical margin to stop shadow from getting trapped */
         min-width: fit-content !important; height: auto !important; overflow: visible !important;
     }}
-    .stTabs [data-baseweb="tab-list"] button:hover {{ 
+    button[data-testid="stTab"]:hover {{ 
         background-color: {theme['btn_sec_hover']} !important; 
     }}
     
     /* 5. The Active Tab - Press animation using transform */
-    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{ 
+    button[data-testid="stTab"][aria-selected="true"] {{ 
         background-color: {theme['btn_primary_bg']} !important; 
         box-shadow: 0px 0px 0px transparent !important; transform: translate(4px, 4px) !important; border-color: {theme['border']} !important;
     }}
     
     /* Force font styling natively on the headers */
-    .stTabs [data-baseweb="tab-list"] button p, .stTabs [data-baseweb="tab-list"] button span {{ 
+    button[data-testid="stTab"] p, button[data-testid="stTab"] span {{ 
         font-weight: 900 !important; color: {theme['text_main']} !important;
     }}
-    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] p, .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] span {{ 
+    button[data-testid="stTab"][aria-selected="true"] p, button[data-testid="stTab"][aria-selected="true"] span {{ 
         color: {theme['btn_primary_text']} !important;
     }}
     
@@ -256,39 +257,14 @@ with col_toggle:
 
 
 # ==========================================
-# 2. CLOCK BANNER (Combined HTML + Executing Script)
+# 2. CLOCK BANNER (Native Markdown)
 # ==========================================
-st.html(f"""
-<style>
-    .neo-banner {{
-        background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px;
-        display: flex; justify-content: center; align-items: center; gap: 40px; 
-        border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px;
-    }}
-    .neo-date {{ font-size: 18px; font-weight: 700; color: {theme['text_main']}; }}
-    .neo-time {{ font-size: 22px; font-weight: 900; color: {theme['time_col']}; }}
-</style>
-<div class="neo-banner">
-    <div class="neo-date" id="neo-date"></div>
-    <div class="neo-time" id="neo-time"></div>
+st.markdown(f"""
+<div style="background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px; display: flex; justify-content: center; align-items: center; gap: 40px; border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px;">
+    <div id="dom-date" style="font-size: 18px; font-weight: 700; color: {theme['text_main']};"></div>
+    <div id="dom-time" style="font-size: 22px; font-weight: 900; color: {theme['time_col']};"></div>
 </div>
-<script>
-    (function() {{
-        function updateClock() {{
-            const now = new Date();
-            const doc = window.parent.document || document;
-            const dateEl = doc.getElementById('neo-date');
-            const timeEl = doc.getElementById('neo-time');
-            if (dateEl && timeEl) {{
-                dateEl.innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
-                timeEl.innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
-            }}
-        }}
-        setInterval(updateClock, 1000); 
-        updateClock();
-    }})();
-</script>
-""")
+""", unsafe_allow_html=True)
 
 
 # ==========================================
@@ -312,8 +288,8 @@ def format_12h(dt):
 with tab1:
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Left Column (Controls) vs Right Column (Info Box)
-    col_left, col_right = st.columns([1.2, 2], gap="large")
+    # Widened left column from 1.2 to 1.6 to ensure internal dropdowns have plenty of pixel space
+    col_left, col_right = st.columns([1.6, 2], gap="large")
     
     with col_left:
         st.write("##### Configuration Mode")
@@ -342,8 +318,8 @@ with tab1:
                 label_visibility="collapsed"
             )
         
-        # Widened the minute and AM/PM columns to ensure text is never cut off
-        t1, t2, t3 = st.columns([1, 1.2, 1.4])
+        # Increased widths for exact fit: PM dropdown gets the most room!
+        t1, t2, t3 = st.columns([1, 1, 1.5])
         with t1:
             hour_val = st.selectbox("Hr", options=list(range(1, 13)), key="hour", label_visibility="collapsed")
         with t2:
@@ -372,7 +348,8 @@ with tab1:
     
     st.divider()
     
-    col_gen, col_ref, col_cam, col_spacer = st.columns([3, 1, 1, 5], gap="small")
+    # Set vertical alignment to 'bottom' so all buttons snap to the exact same visual baseline
+    col_gen, col_ref, col_cam, col_spacer = st.columns([3, 1, 1, 5], gap="small", vertical_alignment="bottom")
     
     with col_gen:
         if st.button("Generate Schedule", type="primary"):
@@ -383,62 +360,12 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            # Merged Camera HTML and JS into one unified executing block inside the layout
-            st.html(f"""
-            <div style="display: flex; width: 56px; height: 56px; align-items: flex-start; justify-content: flex-start;">
+            # Container strictly matches the 48px height of adjacent Streamlit buttons for perfect alignment
+            st.markdown(f"""
+            <div style="display: flex; height: 48px; align-items: flex-end; justify-content: flex-start; padding-bottom: 0px;">
                 <a id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</a>
             </div>
-            <script>
-                (function() {{
-                    function attachCameraEvent() {{
-                        const doc = window.parent.document || document;
-                        const btn = doc.getElementById('capture-btn');
-                        
-                        if (btn && !btn.dataset.attached) {{
-                            btn.addEventListener('click', function(e) {{
-                                e.preventDefault();
-                                function executeCapture() {{
-                                    const target = doc.querySelector('[data-testid="stTable"]');
-                                    if (target) {{
-                                        html2canvas(target, {{
-                                            backgroundColor: '{theme["bg_color"]}', 
-                                            scale: 2,
-                                            onclone: function (clonedDoc) {{
-                                                const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
-                                                cells.forEach(cell => {{
-                                                    cell.style.fontFamily = 'Arial, sans-serif';
-                                                    cell.style.letterSpacing = 'normal';
-                                                    cell.style.whiteSpace = 'nowrap';
-                                                }});
-                                            }}
-                                        }}).then(canvas => {{
-                                            const link = document.createElement('a');
-                                            link.download = 'TMS_Schedule.png';
-                                            link.href = canvas.toDataURL();
-                                            link.click();
-                                        }});
-                                    }} else {{
-                                        alert('Table not found.');
-                                    }}
-                                }}
-                                if (typeof html2canvas === 'undefined') {{
-                                    const script = document.createElement('script');
-                                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-                                    script.onload = executeCapture;
-                                    (doc.head || document.head).appendChild(script);
-                                }} else {{
-                                    executeCapture();
-                                }}
-                            }});
-                            btn.dataset.attached = 'true';
-                        }} else if (!btn) {{
-                            setTimeout(attachCameraEvent, 500);
-                        }}
-                    }}
-                    attachCameraEvent();
-                }})();
-            </script>
-            """)
+            """, unsafe_allow_html=True)
             
         tracker_data = []
         current_time = start_dt
@@ -547,3 +474,56 @@ with tab2:
                 data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
                 current_pct += step_pct
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
+
+# ==========================================
+# SILENT BACKEND DOM SCRIPT RUNNER (NO CONSOLE ERRORS)
+# ==========================================
+components.html("""
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    // 1. Live Clock Runner
+    setInterval(function() {
+        const doc = window.parent.document;
+        const d = doc.getElementById('dom-date');
+        const t = doc.getElementById('dom-time');
+        if (d && t) {
+            const now = new Date();
+            d.innerText = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            t.innerText = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+        }
+    }, 1000);
+
+    // 2. Camera Button Listener Runner
+    function attachCamera() {
+        const doc = window.parent.document;
+        const btn = doc.getElementById('capture-btn');
+        if (btn && !btn.dataset.attached) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = doc.querySelector('[data-testid="stTable"]');
+                if (target) {
+                    html2canvas(target, {
+                        backgroundColor: null,
+                        scale: 2,
+                        onclone: function(cloned) {
+                            const cells = cloned.querySelectorAll('th, td');
+                            cells.forEach(c => { c.style.fontFamily = 'Arial, sans-serif'; c.style.whiteSpace = 'nowrap'; });
+                        }
+                    }).then(canvas => {
+                        const link = document.createElement('a');
+                        link.download = 'TMS_Schedule.png';
+                        link.href = canvas.toDataURL();
+                        link.click();
+                    });
+                } else {
+                    alert('Table not found.');
+                }
+            });
+            btn.dataset.attached = 'true';
+        } else if (!btn) {
+            setTimeout(attachCamera, 500);
+        }
+    }
+    attachCamera();
+</script>
+""", height=0, width=0)
