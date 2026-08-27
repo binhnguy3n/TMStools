@@ -25,7 +25,6 @@ if "schedule_generated" not in st.session_state:
     st.session_state.schedule_generated = False
 
 if "hour" not in st.session_state:
-    # Initialize the default time using the local timezone
     utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
     local_now = utc_now + timedelta(hours=st.session_state.tz_offset)
     st.session_state.hour = int(local_now.strftime("%I"))
@@ -48,15 +47,37 @@ st.markdown("""
         background-color: #FAFAFA !important; font-weight: 600 !important;
     }
     
-    .stButton > button {
+    /* Primary buttons (Generate, Now) */
+    button[kind="primary"] {
         background-color: #FF6B6B !important; color: white !important;
         border-radius: 30px !important; font-weight: 800 !important; font-size: 16px !important;
-        border: none !important; padding: 8px 28px !important;
+        border: none !important; padding: 4px 20px !important; height: 42px !important; margin: 0 !important;
         box-shadow: 0 5px 0px #E63946 !important; transition: all 0.1s ease !important;
-        margin-top: 5px; margin-bottom: 5px;
     }
-    .stButton > button:active { transform: translateY(5px) !important; box-shadow: 0 0px 0px #E63946 !important; }
-    .stButton > button:hover { background-color: #FF8787 !important; }
+    button[kind="primary"]:active { transform: translateY(5px) !important; box-shadow: 0 0px 0px #E63946 !important; }
+    button[kind="primary"]:hover { background-color: #FF8787 !important; }
+
+    /* Secondary buttons (Refresh) made into cute circles */
+    button[kind="secondary"] {
+        background-color: transparent !important; color: #00A389 !important;
+        border: 2px solid #00A389 !important; border-radius: 50% !important;
+        width: 42px !important; height: 42px !important;
+        padding: 0 !important; font-size: 20px !important;
+        box-shadow: 0 3px 0px #007A66 !important; transition: all 0.1s ease !important;
+        display: flex !important; align-items: center !important; justify-content: center !important; margin: 0 !important;
+    }
+    button[kind="secondary"]:active { transform: translateY(3px) !important; box-shadow: 0 0px 0px #007A66 !important; }
+    button[kind="secondary"]:hover { background-color: #E6FFFA !important; }
+
+    /* Camera HTML button styled exactly like secondary button */
+    .camera-btn {
+        background-color: transparent; color: #00A389; border: 2px solid #00A389; border-radius: 50%;
+        width: 42px; height: 42px; padding: 0; font-size: 20px; box-shadow: 0 3px 0px #007A66; 
+        transition: all 0.1s ease; display: flex; align-items: center; justify-content: center;
+        text-decoration: none; margin: 0;
+    }
+    .camera-btn:active { transform: translateY(3px); box-shadow: 0 0px 0px #007A66; }
+    .camera-btn:hover { background-color: #E6FFFA; }
 
     div[data-testid="stAlert"] {
         border-radius: 16px !important; background-color: #F0F9FF !important;
@@ -66,16 +87,23 @@ st.markdown("""
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
     .stTabs [data-baseweb="tab"] { border-radius: 16px 16px 0 0 !important; font-weight: 800 !important; padding: 10px 20px !important; }
     
-    /* Custom Styling for the new Static st.table() to match the Playground aesthetic */
+    /* Force white background for the table so the downloaded image looks clean */
+    [data-testid="stTable"] { background-color: white !important; padding: 10px; border-radius: 12px; }
     [data-testid="stTable"] table { width: 100% !important; border-collapse: collapse !important; }
     [data-testid="stTable"] th { background-color: #FAFAFA !important; border-bottom: 2px dashed #4ECDC4 !important; font-weight: 800 !important; }
     [data-testid="stTable"] td, [data-testid="stTable"] th { padding: 12px 10px !important; }
     [data-testid="stTable"] tr { border-bottom: 1px solid #F3F4F6 !important; }
+
+    /* Container injection styling to unify the banner */
+    div[data-testid="stHorizontalBlock"]:has(.banner-text-target) {
+        background-color: #E6FFFA; border: 2px dashed #00A389; border-radius: 12px;
+        padding: 8px 16px; align-items: center; margin-bottom: 15px; margin-top: -10px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# LIVE DATE/TIME BANNER (Playground Style)
+# LIVE DATE/TIME BANNER
 # ==========================================
 components.html("""
 <style>
@@ -103,12 +131,10 @@ components.html("""
 </script>
 """, height=70)
 
-# Placeholder for the Dynamic "Next Session" Banner
 status_banner = st.empty()
 
 st.title("🧰 TMS Tools")
 
-# Swapped the order of the tabs
 tab1, tab2 = st.tabs(["⏱️ Session Tracker", "📊 Percentage Calculator"])
 
 def format_12h(dt):
@@ -127,14 +153,14 @@ with tab1:
     with col_time:
         st.write("##### First Session Time")
         
-        col_btn, col_tz = st.columns([0.8, 1.2])
+        col_btn, col_tz = st.columns([0.8, 1.2], gap="small")
         with col_btn:
-            st.button("🕒 Now", on_click=set_time_to_now)
+            st.button("🕒 Now", on_click=set_time_to_now, type="primary")
         with col_tz:
             st.selectbox(
                 "Local TZ Offset", 
                 options=[i for i in range(-12, 13)], 
-                index=6, # Defaults to -6
+                index=6, 
                 format_func=lambda x: f"UTC{'+' if x >= 0 else ''}{x}", 
                 key="tz_offset",
                 label_visibility="collapsed"
@@ -167,7 +193,7 @@ with tab1:
     
     st.divider()
     
-    if st.button("Generate Schedule"):
+    if st.button("Generate Schedule", type="primary"):
         st.session_state.schedule_generated = True
         
     if st.session_state.schedule_generated:
@@ -184,7 +210,6 @@ with tab1:
             bring_back = current_time - timedelta(minutes=5)
             finish = current_time + timedelta(minutes=stim_dur) 
             
-            # HIGHLIGHTING LOGIC
             if i < sessions:
                 next_bring_back = current_time + timedelta(minutes=interval) - timedelta(minutes=5)
                 if bring_back <= local_now < next_bring_back:
@@ -193,7 +218,6 @@ with tab1:
                 if bring_back <= local_now <= finish:
                     active_idx = i - 1
             
-            # BANNER LOGIC
             if banner_msg == "" and local_now < current_time:
                 bb_text = f" {format_12h(bring_back)}" if i > 1 else ""
                 session_html = f'<span style="color: #845EF7; font-weight: 900;">Session {i}</span>'
@@ -210,46 +234,57 @@ with tab1:
             })
             current_time += timedelta(minutes=interval)
         
-        # Inject the active session data into the top banner placeholder
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
-        status_banner.markdown(f"""
-        <div style="background-color: #E6FFFA; border: 2px dashed #00A389; border-radius: 12px; padding: 12px 16px; margin-top: -10px; margin-bottom: 20px; color: #007A66; font-weight: 700; text-align: center; font-size: 16px;">
-            {banner_msg}
-        </div>
-        """, unsafe_allow_html=True)
+        # Builds the banner with the Text taking most space, and the two emoji buttons hugging the right side
+        with status_banner.container():
+            col_text, col_ref, col_cam = st.columns([7, 0.7, 0.7])
+            
+            with col_text:
+                st.markdown(f"<div class='banner-text-target' style='color: #007A66; font-weight: 700; font-size: 16px; margin-top: 8px;'>{banner_msg}</div>", unsafe_allow_html=True)
+            
+            with col_ref:
+                st.button("🔄", key="refresh_banner", help="Refresh Highlight")
+                
+            with col_cam:
+                st.markdown("""
+                <a class="camera-btn" href="javascript:(function(){ 
+                    var script = document.createElement('script'); 
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; 
+                    script.onload = function(){ 
+                        html2canvas(document.querySelector('[data-testid=\\'stTable\\']')).then(canvas => { 
+                            var link = document.createElement('a'); 
+                            link.download = 'TMS_Schedule.png'; 
+                            link.href = canvas.toDataURL(); 
+                            link.click(); 
+                        }); 
+                    }; 
+                    document.head.appendChild(script); 
+                })()" title="Download Schedule Image">📷</a>
+                """, unsafe_allow_html=True)
             
         def highlight_custom_cells(x):
             df_style = pd.DataFrame('', index=x.index, columns=x.columns)
             for r in x.index:
                 for c in x.columns:
                     style_str = ""
-                    # Apply green background for the active row
                     if r == active_idx:
                         style_str += "background-color: #E6FFFA; "
                         if c == "Session":
                             style_str += "color: #845EF7; font-weight: 900;" 
                         else:
                             style_str += "color: #00A389; font-weight: 800;" 
-                    # Regular rows
                     else:
                         if c == "Session":
                             style_str += "color: #845EF7; font-weight: 800;" 
                     df_style.at[r, c] = style_str
             return df_style
 
-        # We append .hide(axis="index") to the end of the styler so the row numbers completely disappear
         styled_df = pd.DataFrame(tracker_data).style.apply(highlight_custom_cells, axis=None).hide(axis="index")
         
-        # Swapped interactive st.dataframe for an un-editable, un-sortable st.table
         st.table(styled_df)
-        
-        col_refresh, col_caption = st.columns([1, 2])
-        with col_refresh:
-            st.button("🔄 Refresh Highlight")
-        with col_caption:
-            st.caption("The current block is highlighted in green. The banner at the top updates the moment a session starts.")
+        st.caption("The current block is highlighted in green. The banner at the top updates the moment a session starts.")
 
 # ==========================================
 # TAB 2: PERCENTAGE CALCULATOR
@@ -281,5 +316,4 @@ with tab2:
             while current_pct <= end_pct:
                 data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
                 current_pct += step_pct
-            # The percentage calculator is left as an interactive dataframe so it can still stretch completely
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
