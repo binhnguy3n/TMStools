@@ -10,6 +10,9 @@ st.set_page_config(page_title="TMS Tools", layout="centered", page_icon="🧰")
 if "tz_offset" not in st.session_state:
     st.session_state.tz_offset = -6
 
+if "synthwave_toggle" not in st.session_state:
+    st.session_state.synthwave_toggle = False
+
 def set_time_to_now():
     utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
     local_now = utc_now + timedelta(hours=st.session_state.tz_offset)
@@ -19,6 +22,9 @@ def set_time_to_now():
 
 def set_mode(m):
     st.session_state.mode = m
+
+def toggle_theme():
+    st.session_state.synthwave_toggle = not st.session_state.synthwave_toggle
 
 if "schedule_generated" not in st.session_state:
     st.session_state.schedule_generated = False
@@ -36,7 +42,7 @@ if "mode" not in st.session_state:
 # ==========================================
 # DYNAMIC THEME DICTIONARY
 # ==========================================
-is_synthwave = st.session_state.get("synthwave_toggle", False)
+is_synthwave = st.session_state.synthwave_toggle
 
 if is_synthwave:
     theme = {
@@ -104,10 +110,16 @@ st.markdown(f"""
     p, label, li {{ color: {theme['text_main']} !important; }}
     
     /* Inputs */
-    .stTextInput > div > div > input, .stNumberInput > div > div > input, div[data-baseweb="select"] > div {{
+    .stTextInput > div > div > input, .stNumberInput > div > div > input {{
         border-radius: 8px !important; border: 3px solid {theme['border']} !important;
         background-color: {theme['panel_bg']} !important; font-weight: 800 !important; color: {theme['text_header']} !important;
         box-shadow: 4px 4px 0px {theme['shadow_2']} !important; transition: all 0.1s ease !important;
+    }}
+    div[data-baseweb="select"] > div {{
+        border-radius: 8px !important; border: 3px solid {theme['border']} !important;
+        background-color: {theme['panel_bg']} !important; font-weight: 800 !important; color: {theme['text_header']} !important;
+        box-shadow: 4px 4px 0px {theme['shadow_2']} !important; transition: all 0.1s ease !important;
+        padding-left: 6px !important; padding-right: 6px !important;
     }}
     
     /* Primary buttons (Generate, Now) */
@@ -121,11 +133,11 @@ st.markdown(f"""
     button[kind="primary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="primary"]:hover {{ filter: brightness(1.1); }}
 
-    /* Secondary buttons (Config Modes) */
+    /* Secondary buttons (Config Modes & Theme Toggle) */
     button[kind="secondary"] {{
         background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
-        border-radius: 8px !important; font-weight: 900 !important; font-size: 22px !important;
-        border: 3px solid {theme['border']} !important; width: 48px !important; height: 48px !important; padding: 0 !important; margin: 0 !important;
+        border-radius: 8px !important; font-weight: 900 !important; font-size: 18px !important;
+        border: 3px solid {theme['border']} !important; min-width: 48px !important; height: 48px !important; padding: 0 12px !important; margin: 0 !important;
         box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important;
         display: inline-flex !important; align-items: center !important; justify-content: center !important;
     }}
@@ -234,23 +246,49 @@ st.markdown(f"""
 # ==========================================
 # 1. TITLE & TOGGLE
 # ==========================================
-col_title, col_toggle = st.columns([3, 1])
+col_title, col_spacer, col_toggle = st.columns([3, 0.5, 1.5])
 with col_title:
     st.title("🧰 TMS Tools")
 with col_toggle:
     st.markdown("<br>", unsafe_allow_html=True) 
-    st.toggle("🕶️ Synthwave", key="synthwave_toggle")
+    btn_text = "☀️ Light Mode" if is_synthwave else "🕶️ Synthwave"
+    st.button(btn_text, on_click=toggle_theme, key="theme_btn", type="secondary")
 
 
 # ==========================================
-# 2. CLOCK BANNER (Native Markdown)
+# 2. CLOCK BANNER (Combined HTML + Executing Script)
 # ==========================================
-st.markdown(f"""
-<div style="background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px; display: flex; justify-content: center; align-items: center; gap: 40px; border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px;">
-    <div id="dom-date" style="font-size: 18px; font-weight: 700; color: {theme['text_main']};"></div>
-    <div id="dom-time" style="font-size: 22px; font-weight: 900; color: {theme['time_col']};"></div>
+st.html(f"""
+<style>
+    .neo-banner {{
+        background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px;
+        display: flex; justify-content: center; align-items: center; gap: 40px; 
+        border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px;
+    }}
+    .neo-date {{ font-size: 18px; font-weight: 700; color: {theme['text_main']}; }}
+    .neo-time {{ font-size: 22px; font-weight: 900; color: {theme['time_col']}; }}
+</style>
+<div class="neo-banner">
+    <div class="neo-date" id="neo-date"></div>
+    <div class="neo-time" id="neo-time"></div>
 </div>
-""", unsafe_allow_html=True)
+<script>
+    (function() {{
+        function updateClock() {{
+            const now = new Date();
+            const doc = window.parent.document || document;
+            const dateEl = doc.getElementById('neo-date');
+            const timeEl = doc.getElementById('neo-time');
+            if (dateEl && timeEl) {{
+                dateEl.innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
+                timeEl.innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
+            }}
+        }}
+        setInterval(updateClock, 1000); 
+        updateClock();
+    }})();
+</script>
+""")
 
 
 # ==========================================
@@ -304,7 +342,8 @@ with tab1:
                 label_visibility="collapsed"
             )
         
-        t1, t2, t3 = st.columns([1, 1, 1.4])
+        # Widened the minute and AM/PM columns to ensure text is never cut off
+        t1, t2, t3 = st.columns([1, 1.2, 1.4])
         with t1:
             hour_val = st.selectbox("Hr", options=list(range(1, 13)), key="hour", label_visibility="collapsed")
         with t2:
@@ -344,12 +383,62 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            # Native anchor for camera
-            st.markdown(f"""
+            # Merged Camera HTML and JS into one unified executing block inside the layout
+            st.html(f"""
             <div style="display: flex; width: 56px; height: 56px; align-items: flex-start; justify-content: flex-start;">
                 <a id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</a>
             </div>
-            """, unsafe_allow_html=True)
+            <script>
+                (function() {{
+                    function attachCameraEvent() {{
+                        const doc = window.parent.document || document;
+                        const btn = doc.getElementById('capture-btn');
+                        
+                        if (btn && !btn.dataset.attached) {{
+                            btn.addEventListener('click', function(e) {{
+                                e.preventDefault();
+                                function executeCapture() {{
+                                    const target = doc.querySelector('[data-testid="stTable"]');
+                                    if (target) {{
+                                        html2canvas(target, {{
+                                            backgroundColor: '{theme["bg_color"]}', 
+                                            scale: 2,
+                                            onclone: function (clonedDoc) {{
+                                                const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
+                                                cells.forEach(cell => {{
+                                                    cell.style.fontFamily = 'Arial, sans-serif';
+                                                    cell.style.letterSpacing = 'normal';
+                                                    cell.style.whiteSpace = 'nowrap';
+                                                }});
+                                            }}
+                                        }}).then(canvas => {{
+                                            const link = document.createElement('a');
+                                            link.download = 'TMS_Schedule.png';
+                                            link.href = canvas.toDataURL();
+                                            link.click();
+                                        }});
+                                    }} else {{
+                                        alert('Table not found.');
+                                    }}
+                                }}
+                                if (typeof html2canvas === 'undefined') {{
+                                    const script = document.createElement('script');
+                                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                                    script.onload = executeCapture;
+                                    (doc.head || document.head).appendChild(script);
+                                }} else {{
+                                    executeCapture();
+                                }}
+                            }});
+                            btn.dataset.attached = 'true';
+                        }} else if (!btn) {{
+                            setTimeout(attachCameraEvent, 500);
+                        }}
+                    }}
+                    attachCameraEvent();
+                }})();
+            </script>
+            """)
             
         tracker_data = []
         current_time = start_dt
@@ -458,77 +547,3 @@ with tab2:
                 data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
                 current_pct += step_pct
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
-
-# ==========================================
-# SILENT BACKEND DOM SCRIPT RUNNER
-# ==========================================
-st.html(f"""
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script>
-    (function() {{
-        // Clock functionality targeting the exact DOM node
-        function updateClock() {{
-            const doc = window.parent.document || document;
-            const dateEl = doc.getElementById('dom-date');
-            const timeEl = doc.getElementById('dom-time');
-            if (dateEl && timeEl) {{
-                const now = new Date();
-                dateEl.innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
-                timeEl.innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
-            }}
-        }}
-        setInterval(updateClock, 1000); 
-        updateClock();
-
-        // Camera functionality targeting the exact DOM node
-        function attachCameraEvent() {{
-            const doc = window.parent.document || document;
-            const btn = doc.getElementById('capture-btn');
-            
-            if (btn && !btn.dataset.attached) {{
-                btn.addEventListener('click', function(e) {{
-                    e.preventDefault();
-                    
-                    function executeCapture() {{
-                        const target = doc.querySelector('[data-testid="stTable"]');
-                        if (target) {{
-                            html2canvas(target, {{
-                                backgroundColor: '{theme["bg_color"]}', 
-                                scale: 2,
-                                onclone: function (clonedDoc) {{
-                                    const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
-                                    cells.forEach(cell => {{
-                                        cell.style.fontFamily = 'Arial, sans-serif';
-                                        cell.style.letterSpacing = 'normal';
-                                        cell.style.whiteSpace = 'nowrap';
-                                    }});
-                                }}
-                            }}).then(canvas => {{
-                                const link = document.createElement('a');
-                                link.download = 'TMS_Schedule.png';
-                                link.href = canvas.toDataURL();
-                                link.click();
-                            }});
-                        }} else {{
-                            alert('Table not found.');
-                        }}
-                    }}
-
-                    if (typeof html2canvas === 'undefined') {{
-                        const script = document.createElement('script');
-                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-                        script.onload = executeCapture;
-                        (doc.head || document.head).appendChild(script);
-                    }} else {{
-                        executeCapture();
-                    }}
-                }});
-                btn.dataset.attached = 'true';
-            }} else if (!btn) {{
-                setTimeout(attachCameraEvent, 500);
-            }}
-        }}
-        attachCameraEvent();
-    }})();
-</script>
-""")
