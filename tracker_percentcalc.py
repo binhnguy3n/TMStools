@@ -190,44 +190,31 @@ st.markdown(f"""
        ---------------------------------------------------- */
        
     /* 1. Nuke ALL Streamlit native tab decorations safely */
-    [data-testid="stTabIndicator"], .stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"], .stTabs [data-testid="stTabBorder"] {{
+    [data-testid="stTabIndicator"], .stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"] {{
         display: none !important; background-color: transparent !important; border: none !important; opacity: 0 !important; height: 0px !important; width: 0px !important; visibility: hidden !important;
     }}
     
     /* 2. NUCLEAR OVERRIDE: Destroy Streamlit's hidden clipping walls on all tab containers */
-    div[data-testid="stTabs"] * {{ 
-        overflow: visible !important; 
-    }}
+    div[data-testid="stTabs"] * {{ overflow: visible !important; }}
     
-    /* 3. Give the list container gap spacing and margin so the shadows don't clip */
-    .stTabs [data-baseweb="tab-list"] {{ 
-        gap: 16px !important; padding-bottom: 15px !important; padding-left: 5px !important; padding-top: 5px !important;
-    }}
-    
-    /* 4. Target ONLY the explicit Tab buttons using multiple robust selectors */
-    button[role="tab"], button[data-baseweb="tab"], button[data-testid="stTab"] {{ 
+    /* 3. The Tabs Header Container */
+    div[data-testid="stTabs"] button[role="tab"] {{ 
         background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
         padding: 8px 20px !important; box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; 
-        margin: 0px 8px 12px 0px !important; 
+        margin: 5px 12px 15px 0px !important; /* Critical margin to stop shadow from getting trapped */
         min-width: fit-content !important; height: auto !important;
     }}
-    button[role="tab"]:hover, button[data-baseweb="tab"]:hover, button[data-testid="stTab"]:hover {{ 
-        background-color: {theme['btn_sec_hover']} !important; 
-    }}
+    div[data-testid="stTabs"] button[role="tab"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
     
-    /* 5. The Active Tab - Press animation using transform */
-    button[role="tab"][aria-selected="true"], button[data-baseweb="tab"][aria-selected="true"], button[data-testid="stTab"][aria-selected="true"] {{ 
+    /* 4. The Active Tab - Press animation */
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {{ 
         background-color: {theme['btn_primary_bg']} !important; 
         box-shadow: 0px 0px 0px transparent !important; transform: translate(4px, 4px) !important; border-color: {theme['border']} !important;
     }}
     
-    /* Force font styling natively on the headers */
-    button[role="tab"] p, button[role="tab"] span, button[data-testid="stTab"] p, button[data-testid="stTab"] span {{ 
-        font-weight: 900 !important; color: {theme['text_main']} !important;
-    }}
-    button[role="tab"][aria-selected="true"] p, button[role="tab"][aria-selected="true"] span, button[data-testid="stTab"][aria-selected="true"] p, button[data-testid="stTab"][aria-selected="true"] span {{ 
-        color: {theme['btn_primary_text']} !important;
-    }}
+    /* 5. Font styling natively on the headers */
+    div[data-testid="stTabs"] button[role="tab"] p, div[data-testid="stTabs"] button[role="tab"] span {{ font-weight: 900 !important; color: {theme['text_main']} !important; }}
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p, div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] span {{ color: {theme['btn_primary_text']} !important; }}
     
     /* ---------------------------------------------------- */
     
@@ -256,12 +243,21 @@ with col_toggle:
 
 
 # ==========================================
-# 2. CLOCK BANNER (Native Markdown)
+# 2. CLOCK BANNER (Native Markdown without the body margin override!)
 # ==========================================
 st.markdown(f"""
-<div style="background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px; display: flex; justify-content: center; align-items: center; gap: 40px; border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px;">
-    <div id="dom-date" style="font-size: 18px; font-weight: 700; color: {theme['text_main']};"></div>
-    <div id="dom-time" style="font-size: 22px; font-weight: 900; color: {theme['time_col']};"></div>
+<style>
+    .neo-banner {{
+        background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px;
+        display: flex; justify-content: center; align-items: center; gap: 40px; 
+        border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px;
+    }}
+    .neo-date {{ font-size: 18px; font-weight: 700; color: {theme['text_main']}; }}
+    .neo-time {{ font-size: 22px; font-weight: 900; color: {theme['time_col']}; }}
+</style>
+<div class="neo-banner">
+    <div class="neo-date" id="dom-date"></div>
+    <div class="neo-time" id="dom-time"></div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -345,6 +341,7 @@ with tab1:
     
     st.divider()
     
+    # Bottom alignment forces the Generate, Refresh, and Camera items to visually anchor perfectly
     col_gen, col_ref, col_cam, col_spacer = st.columns([3, 1, 1, 5], gap="small", vertical_alignment="bottom")
     
     with col_gen:
@@ -356,10 +353,9 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
+            # Native markdown prevents hidden wrappers from shifting the button downwards
             st.markdown(f"""
-            <div style="display: flex; height: 48px; align-items: flex-end; justify-content: flex-start; padding-bottom: 0px;">
-                <a id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</a>
-            </div>
+            <button id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</button>
             """, unsafe_allow_html=True)
             
         tracker_data = []
@@ -403,6 +399,7 @@ with tab1:
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
+        # Send the banner text back up the page to the global placeholder
         status_banner.markdown(f"""
         <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
             {banner_msg}
@@ -470,43 +467,55 @@ with tab2:
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
 
 # ==========================================
-# SILENT BACKEND DOM SCRIPT RUNNER
+# SILENT BACKEND DOM SCRIPT RUNNER (PURE NATIVE ST.HTML)
 # ==========================================
 st.html("""
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-    setInterval(function() {
-        const doc = window.parent.document;
-        const d = doc.getElementById('dom-date');
-        const t = doc.getElementById('dom-time');
+    // 1. Live Clock Runner directly targeting DOM
+    function updateClock() {
+        const d = document.getElementById('dom-date');
+        const t = document.getElementById('dom-time');
         if (d && t) {
             const now = new Date();
             d.innerText = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             t.innerText = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
         }
-    }, 1000);
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 2. Camera Capture Integration Runner directly targeting DOM
+    function runCanvas(target) {
+        html2canvas(target, {
+            backgroundColor: null,
+            scale: 2,
+            onclone: function(cloned) {
+                const cells = cloned.querySelectorAll('th, td');
+                cells.forEach(c => { c.style.fontFamily = 'Arial, sans-serif'; c.style.whiteSpace = 'nowrap'; });
+            }
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'TMS_Schedule.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    }
 
     function attachCamera() {
-        const doc = window.parent.document;
-        const btn = doc.getElementById('capture-btn');
+        const btn = document.getElementById('capture-btn');
         if (btn && !btn.dataset.attached) {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const target = doc.querySelector('[data-testid="stTable"]');
+                const target = document.querySelector('[data-testid="stTable"]');
                 if (target) {
-                    html2canvas(target, {
-                        backgroundColor: null,
-                        scale: 2,
-                        onclone: function(cloned) {
-                            const cells = cloned.querySelectorAll('th, td');
-                            cells.forEach(c => { c.style.fontFamily = 'Arial, sans-serif'; c.style.whiteSpace = 'nowrap'; });
-                        }
-                    }).then(canvas => {
-                        const link = document.createElement('a');
-                        link.download = 'TMS_Schedule.png';
-                        link.href = canvas.toDataURL();
-                        link.click();
-                    });
+                    if (typeof html2canvas === 'undefined') {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                        script.onload = () => runCanvas(target);
+                        document.head.appendChild(script);
+                    } else {
+                        runCanvas(target);
+                    }
                 } else {
                     alert('Table not found.');
                 }
