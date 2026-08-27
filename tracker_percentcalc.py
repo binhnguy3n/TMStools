@@ -13,6 +13,9 @@ if "tz_offset" not in st.session_state:
 if "synthwave_toggle" not in st.session_state:
     st.session_state.synthwave_toggle = False
 
+if "known_val_input" not in st.session_state:
+    st.session_state.known_val_input = 0.0
+
 def set_time_to_now():
     utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
     local_now = utc_now + timedelta(hours=st.session_state.tz_offset)
@@ -25,6 +28,9 @@ def set_mode(m):
 
 def toggle_theme():
     st.session_state.synthwave_toggle = not st.session_state.synthwave_toggle
+
+def auto_populate_known_val(val):
+    st.session_state.known_val_input = float(val)
 
 if "schedule_generated" not in st.session_state:
     st.session_state.schedule_generated = False
@@ -82,7 +88,7 @@ else:
         "btn_primary_bg": "#FF6B6B",
         "btn_primary_shadow": "#1E1E1E",
         "btn_primary_text": "#FFFFFF",
-        "btn_sec_shadow": "#374151",
+        "btn_sec_shadow": "#374151",  
         "btn_sec_hover": "#F3F4F6",
         "active_config_bg": "#FFE66D",
         "active_config_text": "#1E1E1E",
@@ -122,18 +128,22 @@ st.markdown(f"""
         padding-left: 2px !important; padding-right: 2px !important;
     }}
     
-    /* Disabled inputs styled to look natural in the Brutalist theme */
-    input:disabled {{
-        background-color: {theme['zebra_bg']} !important;
-        color: {theme['text_main']} !important;
-        cursor: not-allowed !important;
-        opacity: 0.8 !important;
+    /* Highlighted Disabled Input (For the RMT 120% Target Box) */
+    input:disabled, div[data-baseweb="input"] input:disabled {{
+        background-color: {theme['active_row_bg']} !important;
+        color: {theme['active_row_text']} !important;
+        -webkit-text-fill-color: {theme['active_row_text']} !important;
+        opacity: 1 !important;
+        cursor: copy !important;
+        border: 3px dashed {theme['border']} !important;
+        font-weight: 900 !important;
+        box-shadow: 4px 4px 0px {theme['shadow_1']} !important;
     }}
     
     /* Stop Streamlit flexbox from dynamically squishing/stretching buttons */
     div[data-testid="stButton"] {{ width: fit-content !important; }}
 
-    /* Primary buttons (Generate, Now) */
+    /* Primary buttons (Generate, Now, Use Value) */
     button[kind="primary"] {{
         background-color: {theme['btn_primary_bg']} !important; color: {theme['btn_primary_text']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
@@ -144,7 +154,7 @@ st.markdown(f"""
     button[kind="primary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="primary"]:hover {{ filter: brightness(1.1); }}
 
-    /* Secondary buttons (Theme Toggle & Refresh/Camera Tooltips) */
+    /* Secondary buttons (Theme Toggle ONLY) -> Keeps text wide dynamically */
     button[kind="secondary"] {{
         background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
@@ -155,15 +165,12 @@ st.markdown(f"""
     button[kind="secondary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="secondary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
 
-    /* Lock secondary buttons to perfect 48x48 squares IF they are inside a tooltip (Refresh/Camera) */
-    div[data-testid="stTooltipHoverTarget"] button[kind="secondary"] {{
+    /* Refresh & Camera Buttons -> Targeted via nested Tab Container so they stay perfect squares! */
+    .stTabs button[kind="secondary"] {{
         font-size: 22px !important;
         width: 48px !important; min-width: 48px !important; max-width: 48px !important;
         height: 48px !important; padding: 0 !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
-        aspect-ratio: 1/1 !important; box-sizing: border-box !important;
-        border-radius: 8px !important; /* Explicitly forces radius so Streamlit can't fuse them */
-        margin-left: 2px !important; margin-right: 2px !important; /* Adds physical buffer */
     }}
 
     /* Tertiary buttons (Config Modes) - SLIM, LOCKED 32x48 PILLS */
@@ -358,8 +365,8 @@ with tab1:
     
     st.divider()
     
-    # Widened the columns holding the refresh and camera buttons so they have enough pixel width to not overflow and fuse!
-    col_gen, col_ref, col_cam, col_spacer = st.columns([2.8, 0.9, 0.9, 5.4], gap="medium", vertical_alignment="bottom")
+    # Aggressively tuned column grid pulls the action buttons tight to the generate button!
+    col_gen, col_ref, col_cam, col_spacer = st.columns([18, 5, 5, 50], gap="small", vertical_alignment="bottom")
     
     with col_gen:
         if st.button("Generate Schedule", type="primary"):
@@ -413,7 +420,6 @@ with tab1:
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
-        # Send the banner text back up the page to the global placeholder
         status_banner.markdown(f"""
         <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
             {banner_msg}
@@ -455,11 +461,18 @@ with tab2:
     st.markdown("<br>", unsafe_allow_html=True)
     
     st.write("##### Quick 120% RMT Calculator")
-    rmt_col1, rmt_col2 = st.columns(2, gap="large")
+    rmt_col1, rmt_col2, rmt_col3 = st.columns([1.5, 1.5, 1.2], gap="small", vertical_alignment="bottom")
     with rmt_col1:
         rmt_val = st.number_input("Resting Motor Threshold (RMT)", min_value=0.0, value=0.0, step=1.0)
+    
+    # Calculate Live
+    target_120 = rmt_val * 1.2
+    
     with rmt_col2:
-        st.text_input("120% Target Output", value=f"{rmt_val * 1.2:.1f}" if rmt_val > 0 else "0.0", disabled=True)
+        st.text_input("120% Target Output", value=f"{target_120:.1f}", disabled=True)
+    with rmt_col3:
+        # Button overwrites the known_val input box instantaneously!
+        st.button("⬇️ Use Value", on_click=auto_populate_known_val, args=(target_120,), type="primary")
 
     st.divider()
     
@@ -467,8 +480,7 @@ with tab2:
     with col_a:
         st.write("##### 1. Known Values")
         known_pct = st.number_input("Known Percentage (%)", min_value=0.1, value=120.0, step=1.0)
-        # Default known value changed to 0.0
-        known_val = st.number_input("Known Value", value=0.0, step=1.0)
+        known_val = st.number_input("Known Value", value=st.session_state.known_val_input, step=1.0, key="known_val_input")
     with col_b:
         st.write("##### 2. Table Settings")
         start_pct = st.number_input("Start Percentage (%)", value=30.0, step=1.0)
@@ -477,7 +489,6 @@ with tab2:
     
     st.divider()
     
-    # Removed the `and known_val > 0` condition so the table naturally renders with base 0s when initialized
     if known_pct > 0:
         base_value = known_val / (known_pct / 100)
         step_value = base_value * (step_pct / 100)
