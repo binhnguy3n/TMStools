@@ -178,32 +178,35 @@ st.markdown(f"""
        COMPLETELY CUSTOMIZED BRUTALIST UI TABS 
        ---------------------------------------------------- */
        
-    /* Nuke Streamlit's native blue underline elements */
+    /* 1. Nuke ALL Streamlit native tab decorations safely */
     [data-testid="stTabIndicator"], .stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"], .stTabs [data-testid="stTabBorder"] {{
         display: none !important; background-color: transparent !important; border: none !important; opacity: 0 !important; height: 0px !important; width: 0px !important; visibility: hidden !important;
     }}
     
-    /* Give the list container gap spacing */
+    /* 2. Give the list container gap spacing and ensure visible overflow */
     .stTabs [data-baseweb="tab-list"] {{ 
-        gap: 16px !important; overflow: visible !important; padding-top: 5px !important;
+        gap: 20px !important; padding-bottom: 15px !important; padding-left: 5px !important; padding-top: 5px !important; overflow: visible !important;
     }}
     
-    /* The Tabs - Added margin-bottom to physically reserve space for the shadow! */
-    .stTabs [data-baseweb="tab"] {{ 
+    /* 3. The Tabs - Targeted specifically at the role='tab' button element */
+    .stTabs button[role="tab"], .stTabs button[data-baseweb="tab"] {{ 
         background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
         padding: 8px 20px !important; color: {theme['text_main']} !important; font-weight: 900 !important; font-size: 16px !important;
         box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; 
-        margin: 0px 4px 8px 0px !important; /* Critical fix for un-hiding shadows */
-        min-width: fit-content !important; height: auto !important;
+        margin: 0px 5px 8px 0px !important; /* Critical margin to stop shadow from getting trapped */
+        min-width: fit-content !important; height: auto !important; overflow: visible !important;
     }}
-    .stTabs [data-baseweb="tab"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
+    .stTabs button[role="tab"]:hover, .stTabs button[data-baseweb="tab"]:hover {{ 
+        background-color: {theme['btn_sec_hover']} !important; 
+    }}
     
-    /* The Active Tab */
-    .stTabs [aria-selected="true"] {{ 
+    /* 4. The Active Tab - Press animation using transform */
+    .stTabs button[role="tab"][aria-selected="true"], .stTabs button[data-baseweb="tab"][aria-selected="true"] {{ 
         background-color: {theme['btn_primary_bg']} !important; color: {theme['btn_primary_text']} !important;
         box-shadow: 0px 0px 0px transparent !important; transform: translate(4px, 4px) !important; border-color: {theme['border']} !important;
     }}
-    .stTabs [data-baseweb="tab"] p, .stTabs [data-baseweb="tab"] span {{ font-weight: 900 !important; }}
+    
+    .stTabs button[role="tab"] p, .stTabs button[role="tab"] span {{ font-weight: 900 !important; }}
     
     /* ---------------------------------------------------- */
     
@@ -288,7 +291,6 @@ with tab1:
         st.write("##### Configuration Mode")
         mode = st.session_state.mode
         
-        # Widened these columns significantly so the 48px buttons have room to breathe and not overlap!
         col_m1, col_m2, col_m3, col_mspace = st.columns([1, 1, 1, 3], gap="small")
         with col_m1:
             st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset")
@@ -312,7 +314,8 @@ with tab1:
                 label_visibility="collapsed"
             )
         
-        t1, t2, t3 = st.columns(3)
+        # Adjusted the 3rd column (AM/PM) to [1, 1, 1.4] so "PM" doesn't get cut off!
+        t1, t2, t3 = st.columns([1, 1, 1.4])
         with t1:
             hour_val = st.selectbox("Hr", options=list(range(1, 13)), key="hour", label_visibility="collapsed")
         with t2:
@@ -341,7 +344,6 @@ with tab1:
     
     st.divider()
     
-    # Adjusted ratios to give the Refresh and Camera columns far more horizontal pixel width so they don't squish
     col_gen, col_ref, col_cam, col_spacer = st.columns([3, 1, 1, 5], gap="small")
     
     with col_gen:
@@ -353,7 +355,6 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            # Expanded wrapper container to 56px to guarantee the 48px button's shadow does not get clipped internally
             st.html(f"""
             <div style="display: flex; width: 56px; height: 56px; align-items: flex-start; justify-content: flex-start;">
                 <a id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</a>
@@ -401,7 +402,6 @@ with tab1:
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
-        # Send the banner text back up the page to the global placeholder
         status_banner.markdown(f"""
         <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
             {banner_msg}
