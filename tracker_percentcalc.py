@@ -162,6 +162,8 @@ st.markdown(f"""
         height: 48px !important; padding: 0 !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
         aspect-ratio: 1/1 !important; box-sizing: border-box !important;
+        border-radius: 8px !important; /* Explicitly forces radius so Streamlit can't fuse them */
+        margin-left: 2px !important; margin-right: 2px !important; /* Adds physical buffer */
     }}
 
     /* Tertiary buttons (Config Modes) - SLIM, LOCKED 32x48 PILLS */
@@ -356,8 +358,8 @@ with tab1:
     
     st.divider()
     
-    # Adjusted ratios strictly pulling the square buttons closer to the Generate button
-    col_gen, col_ref, col_cam, col_spacer = st.columns([2.5, 0.6, 0.6, 6.3], gap="small", vertical_alignment="bottom")
+    # Widened the columns holding the refresh and camera buttons so they have enough pixel width to not overflow and fuse!
+    col_gen, col_ref, col_cam, col_spacer = st.columns([2.8, 0.9, 0.9, 5.4], gap="medium", vertical_alignment="bottom")
     
     with col_gen:
         if st.button("Generate Schedule", type="primary"):
@@ -475,7 +477,8 @@ with tab2:
     
     st.divider()
     
-    if known_pct > 0 and known_val > 0:
+    # Removed the `and known_val > 0` condition so the table naturally renders with base 0s when initialized
+    if known_pct > 0:
         base_value = known_val / (known_pct / 100)
         step_value = base_value * (step_pct / 100)
         st.info(f"**Base Value (100%):** {base_value:g} &nbsp;&nbsp;|&nbsp;&nbsp; **{step_pct:g}% increment:** {step_value:g}", icon="💡")
@@ -486,7 +489,6 @@ with tab2:
             while current_pct <= end_pct:
                 data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
                 current_pct += step_pct
-            # Converting to st.table dynamically applies the Brutalist Theme shadow box globally!
             st.table(pd.DataFrame(data).style.hide(axis="index"))
 
 # ==========================================
