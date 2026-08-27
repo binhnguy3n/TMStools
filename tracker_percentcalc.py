@@ -37,7 +37,6 @@ if "mode" not in st.session_state:
 # ==========================================
 # DYNAMIC THEME DICTIONARY
 # ==========================================
-# Grabs the toggle state from session state (defaults to False/Light Mode)
 is_synthwave = st.session_state.get("synthwave_toggle", False)
 
 if is_synthwave:
@@ -56,7 +55,7 @@ if is_synthwave:
         "btn_sec_hover": "#23283B",
         "active_config_bg": "#FFC900",
         "active_config_text": "#090A0F",
-        "active_row_bg": "#2A0826", # Deep neon magenta tint
+        "active_row_bg": "#2A0826", 
         "active_row_text": "#FFC900",
         "zebra_bg": "#0e1017",
         "session_col": "#FF2A6D",
@@ -82,7 +81,7 @@ else:
         "btn_sec_hover": "#F3F4F6",
         "active_config_bg": "#FFE66D",
         "active_config_text": "#1E1E1E",
-        "active_row_bg": "#E6FFFA", # Soft mint
+        "active_row_bg": "#E6FFFA", 
         "active_row_text": "#00A389",
         "zebra_bg": "#F3F4F6",
         "session_col": "#845EF7",
@@ -205,12 +204,11 @@ components.html(f"""
 """, height=90)
 
 
-# Title and Toggle Header Layout
 col_title, col_toggle = st.columns([3, 1])
 with col_title:
     st.title("🧰 TMS Tools")
 with col_toggle:
-    st.markdown("<br>", unsafe_allow_html=True) # spacing
+    st.markdown("<br>", unsafe_allow_html=True) 
     st.toggle("🕶️ Synthwave", key="synthwave_toggle")
 
 status_banner = st.empty()
@@ -294,16 +292,18 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
+            # Increased height, added padding to prevent clipping, and explicitly centered the button content
             components.html(f"""
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
             <style>
                 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
-                body {{ margin: 0; padding: 0; display: flex; align-items: flex-start; justify-content: flex-start; font-family: 'Nunito', sans-serif; background: transparent;}}
+                body {{ margin: 0; padding: 4px; display: flex; align-items: flex-start; justify-content: flex-start; font-family: 'Nunito', sans-serif; background: transparent;}}
                 .camera-btn {{
                     background-color: {theme['panel_bg']}; color: {theme['border']}; border: 3px solid {theme['border']}; border-radius: 8px;
                     width: 42px; height: 42px; font-size: 20px; box-shadow: 4px 4px 0px {theme['border']}; 
-                    cursor: pointer; transition: all 0.1s ease; display: inline-flex; align-items: center; justify-content: center;
-                    padding: 0; margin: 0;
+                    cursor: pointer; transition: all 0.1s ease; 
+                    display: flex; align-items: center; justify-content: center;
+                    padding: 0; margin: 0; box-sizing: border-box; line-height: 1;
                 }}
                 .camera-btn:active {{ transform: translate(4px, 4px); box-shadow: 0px 0px 0px {theme['border']}; }}
                 .camera-btn:hover {{ filter: brightness(1.2); }}
@@ -339,7 +339,7 @@ with tab1:
                     }}
                 }}
             </script>
-            """, height=50)
+            """, height=60)
             
         tracker_data = []
         current_time = start_dt
