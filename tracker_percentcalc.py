@@ -173,49 +173,53 @@ st.markdown(f"""
        COMPLETELY CUSTOMIZED BRUTALIST UI TABS 
        ---------------------------------------------------- */
        
-    /* 1. Nuke Streamlit's native blue lines and grey borders entirely */
-    .stTabs [data-baseweb="tab-border"], 
-    .stTabs [data-baseweb="tab-highlight"] {{
+    /* 1. Nuke ALL Streamlit native tab decorations */
+    .stTabs [data-baseweb="tab-highlight"],
+    .stTabs [data-baseweb="tab-border"],
+    .stTabs [data-testid="stTabBorder"] {{
         display: none !important;
         background-color: transparent !important;
-        height: 0 !important; width: 0 !important;
+        opacity: 0 !important;
+        height: 0px !important;
     }}
     
-    /* 2. Style the container to give the shadow room so it doesn't clip */
+    /* 2. Style the container with EXTRA padding so shadows do not get clipped */
     .stTabs [data-baseweb="tab-list"] {{ 
         gap: 16px !important; 
-        padding-bottom: 12px !important; 
-        padding-right: 12px !important;
-        padding-top: 4px !important;
+        padding: 5px 15px 15px 5px !important; 
+        overflow: visible !important;
     }}
     
-    /* 3. The Inactive Tab (Pill Button) */
-    .stTabs [data-baseweb="tab"] {{ 
+    /* 3. The Tabs (Targeting the buttons strictly) */
+    .stTabs button[data-baseweb="tab"] {{ 
         background-color: {theme['panel_bg']} !important;
         border: 3px solid {theme['border']} !important;
         border-radius: 8px !important;
-        padding: 10px 24px !important;
+        padding: 8px 20px !important;
         color: {theme['text_main']} !important;
         font-weight: 900 !important;
         font-size: 16px !important;
         box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important;
         transition: all 0.1s ease !important;
         margin: 0 !important; 
+        min-width: fit-content !important; /* Prevents text squishing */
+        height: auto !important;
     }}
-    .stTabs [data-baseweb="tab"]:hover {{
+    .stTabs button[data-baseweb="tab"]:hover {{
         background-color: {theme['btn_sec_hover']} !important;
     }}
     
-    /* 4. The Active Tab - Removed the translation shift so it no longer clips! */
-    .stTabs [aria-selected="true"] {{ 
+    /* 4. The Active Tab */
+    .stTabs button[data-baseweb="tab"][aria-selected="true"] {{ 
         background-color: {theme['btn_primary_bg']} !important; 
         color: {theme['btn_primary_text']} !important;
-        box-shadow: 4px 4px 0px {theme['btn_primary_shadow']} !important; 
+        box-shadow: 0px 0px 0px transparent !important; 
+        transform: translate(4px, 4px) !important;
         border-color: {theme['border']} !important;
     }}
     
     /* Ensure emoji and text within tabs inherit the bold font */
-    .stTabs [data-baseweb="tab"] p, .stTabs [data-baseweb="tab"] span {{
+    .stTabs button[data-baseweb="tab"] p, .stTabs button[data-baseweb="tab"] span {{
         font-weight: 900 !important;
     }}
     
@@ -444,7 +448,7 @@ with tab2:
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
 
 # ==========================================
-# SILENT BACKEND DOM SCRIPT RUNNER (REPLACED COMPONENTS API)
+# SILENT BACKEND DOM SCRIPT RUNNER
 # ==========================================
 st.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
