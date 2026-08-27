@@ -46,7 +46,7 @@ st.markdown("""
         box-shadow: 4px 4px 0px #FFE66D !important; transition: all 0.1s ease !important;
     }
     
-    /* Primary buttons (Generate, Now) - Fixed wrapping issue */
+    /* Primary buttons (Generate, Now) */
     button[kind="primary"] {
         background-color: #FF6B6B !important; color: white !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
@@ -57,13 +57,13 @@ st.markdown("""
     button[kind="primary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
     button[kind="primary"]:hover { background-color: #FF8787 !important; }
 
-    /* Secondary buttons (Refresh) */
+    /* Secondary buttons (Refresh) turned into perfect square icons */
     button[kind="secondary"] {
         background-color: white !important; color: #1E1E1E !important;
-        border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
-        border: 3px solid #1E1E1E !important; padding: 6px 16px !important; min-height: 42px !important; height: auto !important; margin: 0 !important;
+        border-radius: 8px !important; font-weight: 900 !important; font-size: 20px !important;
+        border: 3px solid #1E1E1E !important; width: 42px !important; height: 42px !important; padding: 0 !important; margin: 0 !important;
         box-shadow: 4px 4px 0px #1E1E1E !important; transition: all 0.1s ease !important;
-        white-space: nowrap !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;
+        display: inline-flex !important; align-items: center !important; justify-content: center !important;
     }
     button[kind="secondary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
     button[kind="secondary"]:hover { background-color: #E6FFFA !important; }
@@ -86,7 +86,6 @@ st.markdown("""
     [data-testid="stTable"] table { width: 100% !important; border-collapse: collapse !important; }
     [data-testid="stTable"] th { background-color: #FAFAFA !important; border-bottom: 3px solid #1E1E1E !important; font-weight: 900 !important; white-space: nowrap !important;}
     [data-testid="stTable"] td, [data-testid="stTable"] th { padding: 12px 10px !important; font-weight: 700; color: #1E1E1E; white-space: nowrap !important;}
-    [data-testid="stTable"] tr { border-bottom: 2px solid #F3F4F6 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -181,8 +180,8 @@ with tab1:
     
     st.divider()
     
-    # Action Buttons (Generate, Refresh, and Camera side-by-side)
-    col_gen, col_ref, col_cam, col_spacer = st.columns([1.6, 1.2, 1.2, 1.5])
+    # Adjusted columns so the Generate Button gets space, and the two icon buttons fit perfectly next to it
+    col_gen, col_ref, col_cam, col_spacer = st.columns([1.6, 0.5, 0.5, 2])
     
     with col_gen:
         if st.button("Generate Schedule", type="primary"):
@@ -190,10 +189,10 @@ with tab1:
             
     if st.session_state.schedule_generated:
         with col_ref:
-            st.button("🔄 Refresh", help="Update the green highlight")
+            st.button("🔄", help="Update the green highlight")
             
         with col_cam:
-            # Styled identical to the Python buttons above, but triggers JavaScript
+            # Custom 42x42 square camera icon button
             components.html("""
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
             <style>
@@ -201,14 +200,14 @@ with tab1:
                 body { margin: 0; padding: 0; display: flex; align-items: flex-start; font-family: 'Nunito', sans-serif;}
                 .camera-btn {
                     background-color: white; color: #1E1E1E; border: 3px solid #1E1E1E; border-radius: 8px;
-                    padding: 6px 16px; min-height: 42px; font-size: 16px; font-weight: 900; box-shadow: 4px 4px 0px #1E1E1E; 
+                    width: 42px; height: 42px; font-size: 20px; box-shadow: 4px 4px 0px #1E1E1E; 
                     cursor: pointer; transition: all 0.1s ease; display: inline-flex; align-items: center; justify-content: center;
-                    white-space: nowrap; text-decoration: none;
+                    padding: 0; margin: 0;
                 }
                 .camera-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #1E1E1E; }
                 .camera-btn:hover { background-color: #E6FFFA; }
             </style>
-            <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷 Save</button>
+            <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷</button>
             <script>
                 function takePic() {
                     try {
@@ -263,11 +262,13 @@ with tab1:
                     active_idx = i - 1
             
             if banner_msg == "" and local_now < current_time:
-                bb_text = f" &nbsp;{format_12h(bring_back)}" if i > 1 else ""
+                bb_text = f"{format_12h(bring_back)}" if i > 1 else ""
                 session_html = f'<span style="color: #845EF7; font-weight: 900;">Session {i}</span>'
                 time_html = f'<span style="color: #3B82F6; font-weight: 900;">{bb_text}</span>' if bb_text else ""
-                # Added strict HTML non-breaking spaces for a clean gap
-                banner_msg = f"Next: &nbsp;&nbsp; {session_html}{time_html}"
+                
+                # Added 5 precise non-breaking spaces here to create a clear gap between the Session Name and the Time
+                spacing = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" if bb_text else ""
+                banner_msg = f"Next: &nbsp;&nbsp; {session_html}{spacing}{time_html}"
             
             bring_back_str = "" if i == 1 else format_12h(bring_back)
             
@@ -290,18 +291,31 @@ with tab1:
             
         def highlight_custom_cells(x):
             df_style = pd.DataFrame('', index=x.index, columns=x.columns)
-            for r in x.index:
+            # Use enumerate to keep track of the row number for Zebra Striping
+            for row_num, r in enumerate(x.index):
                 for c in x.columns:
                     style_str = ""
+                    
+                    # 1. Active Row Override (Always Green)
                     if r == active_idx:
                         style_str += "background-color: #E6FFFA; "
                         if c == "Session":
                             style_str += "color: #845EF7; font-weight: 900;" 
                         else:
                             style_str += "color: #00A389; font-weight: 900;" 
+                            
+                    # 2. Inactive Rows (Apply Zebra Striping)
                     else:
+                        if row_num % 2 == 1:
+                            # Odd rows get a soft alternating gray background
+                            style_str += "background-color: #F3F4F6; "
+                        else:
+                            # Even rows stay white
+                            style_str += "background-color: #FFFFFF; "
+                            
                         if c == "Session":
                             style_str += "color: #845EF7; font-weight: 900;" 
+                            
                     df_style.at[r, c] = style_str
             return df_style
 
