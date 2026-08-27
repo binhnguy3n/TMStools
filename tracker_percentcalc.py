@@ -82,7 +82,7 @@ else:
         "btn_primary_bg": "#FF6B6B",
         "btn_primary_shadow": "#1E1E1E",
         "btn_primary_text": "#FFFFFF",
-        "btn_sec_shadow": "#4B5563",
+        "btn_sec_shadow": "#374151", # Dark Slate Gray Shadow for Theme Toggle & Tabs!
         "btn_sec_hover": "#F3F4F6",
         "active_config_bg": "#FFE66D",
         "active_config_text": "#1E1E1E",
@@ -133,36 +133,37 @@ st.markdown(f"""
     button[kind="primary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="primary"]:hover {{ filter: brightness(1.1); }}
 
-    /* Secondary buttons (Config Modes & Theme Toggle) */
+    /* Secondary buttons (Theme Toggle) -> Allows text to fit dynamically */
     button[kind="secondary"] {{
         background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
-        border-radius: 8px !important; font-weight: 900 !important; font-size: 18px !important;
-        border: 3px solid {theme['border']} !important; min-width: 48px !important; height: 48px !important; padding: 0 12px !important; margin: 0 !important;
+        border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
+        border: 3px solid {theme['border']} !important; height: 48px !important; padding: 0 16px !important; margin: 0 !important;
         box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important;
-        display: inline-flex !important; align-items: center !important; justify-content: center !important;
+        display: inline-flex !important; align-items: center !important; justify-content: center !important; width: max-content !important;
     }}
     button[kind="secondary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="secondary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
 
-    /* Active Config Button (Disabled state) */
-    button[kind="secondary"]:disabled {{
-        background-color: {theme['active_config_bg']} !important; color: {theme['active_config_text']} !important;
-        transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important;
-        opacity: 1 !important; cursor: default !important; border-color: {theme['border']} !important;
-    }}
-
-    /* Tertiary buttons (Refresh icon) */
+    /* Tertiary buttons (Config Modes & Refresh icon) -> Strictly locked to 48x48 squares! */
     button[kind="tertiary"] {{
         background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 22px !important;
         border: 3px solid {theme['border']} !important; 
-        width: 48px !important; min-width: 48px !important; height: 48px !important; min-height: 48px !important; 
+        width: 48px !important; min-width: 48px !important; max-width: 48px !important;
+        height: 48px !important; min-height: 48px !important; max-height: 48px !important; 
         padding: 0 !important; margin: 0 !important; box-sizing: border-box !important;
-        box-shadow: 4px 4px 0px {theme['border']} !important; transition: all 0.1s ease !important;
+        box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important;
         display: inline-flex !important; align-items: center !important; justify-content: center !important;
     }}
     button[kind="tertiary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="tertiary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
+
+    /* Active Config Button (Disabled state) */
+    button[kind="tertiary"]:disabled {{
+        background-color: {theme['active_config_bg']} !important; color: {theme['active_config_text']} !important;
+        transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important;
+        opacity: 1 !important; cursor: default !important; border-color: {theme['border']} !important;
+    }}
 
     /* Custom Native Camera Anchor Button */
     .camera-btn {{
@@ -171,7 +172,7 @@ st.markdown(f"""
         border: 3px solid {theme['border']} !important; 
         width: 48px !important; min-width: 48px !important; height: 48px !important; min-height: 48px !important; 
         padding: 0 !important; margin: 0 !important; box-sizing: border-box !important;
-        box-shadow: 4px 4px 0px {theme['border']} !important; transition: all 0.1s ease !important;
+        box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important;
         display: inline-flex !important; align-items: center !important; justify-content: center !important;
         text-decoration: none !important; cursor: pointer !important;
     }}
@@ -190,31 +191,38 @@ st.markdown(f"""
        ---------------------------------------------------- */
        
     /* 1. Nuke ALL Streamlit native tab decorations safely */
-    [data-testid="stTabIndicator"], .stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"] {{
-        display: none !important; background-color: transparent !important; border: none !important; opacity: 0 !important; height: 0px !important; width: 0px !important; visibility: hidden !important;
+    div[data-testid="stTabIndicator"], .stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"] {{
+        display: none !important; opacity: 0 !important; visibility: hidden !important;
     }}
     
     /* 2. NUCLEAR OVERRIDE: Destroy Streamlit's hidden clipping walls on all tab containers */
-    div[data-testid="stTabs"] * {{ overflow: visible !important; }}
+    div[data-testid="stTabs"], div[data-testid="stTabs"] > div, div[data-baseweb="tab-list"] {{ 
+        overflow: visible !important; 
+    }}
     
-    /* 3. The Tabs Header Container */
-    div[data-testid="stTabs"] button[role="tab"] {{ 
+    /* 3. Give the list container gap spacing and physical room for the shadow */
+    .stTabs [data-baseweb="tab-list"] {{ 
+        gap: 16px !important; padding-bottom: 20px !important; padding-top: 5px !important;
+    }}
+    
+    /* 4. Target ONLY the explicit Tab buttons using the highly reliable data-testid */
+    button[data-testid="stTab"] {{ 
         background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
         padding: 8px 20px !important; box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; 
-        margin: 5px 12px 15px 0px !important; /* Critical margin to stop shadow from getting trapped */
-        min-width: fit-content !important; height: auto !important;
+        margin: 0px 6px 12px 0px !important; /* Critical margin to stop shadow from getting trapped */
+        min-width: fit-content !important; height: auto !important; overflow: visible !important;
     }}
-    div[data-testid="stTabs"] button[role="tab"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
+    button[data-testid="stTab"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
     
-    /* 4. The Active Tab - Press animation */
-    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {{ 
+    /* 5. The Active Tab - Press animation using transform */
+    button[data-testid="stTab"][aria-selected="true"] {{ 
         background-color: {theme['btn_primary_bg']} !important; 
         box-shadow: 0px 0px 0px transparent !important; transform: translate(4px, 4px) !important; border-color: {theme['border']} !important;
     }}
     
-    /* 5. Font styling natively on the headers */
-    div[data-testid="stTabs"] button[role="tab"] p, div[data-testid="stTabs"] button[role="tab"] span {{ font-weight: 900 !important; color: {theme['text_main']} !important; }}
-    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p, div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] span {{ color: {theme['btn_primary_text']} !important; }}
+    /* Force font styling natively on the headers */
+    button[data-testid="stTab"] p, button[data-testid="stTab"] span {{ font-weight: 900 !important; color: {theme['text_main']} !important; }}
+    button[data-testid="stTab"][aria-selected="true"] p, button[data-testid="stTab"][aria-selected="true"] span {{ color: {theme['btn_primary_text']} !important; }}
     
     /* ---------------------------------------------------- */
     
@@ -239,27 +247,45 @@ with col_title:
 with col_toggle:
     st.markdown("<br>", unsafe_allow_html=True) 
     btn_text = "☀️ Light Mode" if is_synthwave else "🕶️ Synthwave"
+    # Setting type="secondary" here keeps it wide so the text isn't cut off!
     st.button(btn_text, on_click=toggle_theme, key="theme_btn", type="secondary")
 
 
 # ==========================================
-# 2. CLOCK BANNER (Native Markdown without the body margin override!)
+# 2. CLOCK BANNER (Native st.html - Embedded Script prevents blank loads)
 # ==========================================
-st.markdown(f"""
+st.html(f"""
 <style>
     .neo-banner {{
         background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px;
         display: flex; justify-content: center; align-items: center; gap: 40px; 
         border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px;
     }}
-    .neo-date {{ font-size: 18px; font-weight: 700; color: {theme['text_main']}; }}
-    .neo-time {{ font-size: 22px; font-weight: 900; color: {theme['time_col']}; }}
+    .neo-date {{ font-size: 18px; font-weight: 700; color: {theme['text_main']}; font-family: 'Nunito', sans-serif;}}
+    .neo-time {{ font-size: 22px; font-weight: 900; color: {theme['time_col']}; font-family: 'Nunito', sans-serif;}}
 </style>
 <div class="neo-banner">
-    <div class="neo-date" id="dom-date"></div>
-    <div class="neo-time" id="dom-time"></div>
+    <div class="neo-date" id="neo-date"></div>
+    <div class="neo-time" id="neo-time"></div>
 </div>
-""", unsafe_allow_html=True)
+<script>
+    (function() {{
+        function updateClock() {{
+            const now = new Date();
+            // Robustly target DOM elements inside the Streamlit hierarchy
+            const doc = window.parent.document || document;
+            const dateEl = doc.getElementById('neo-date');
+            const timeEl = doc.getElementById('neo-time');
+            if (dateEl && timeEl) {{
+                dateEl.innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
+                timeEl.innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
+            }}
+        }}
+        setInterval(updateClock, 1000); 
+        updateClock();
+    }})();
+</script>
+""")
 
 
 # ==========================================
@@ -290,12 +316,13 @@ with tab1:
         mode = st.session_state.mode
         
         col_m1, col_m2, col_m3, col_mspace = st.columns([1, 1, 1, 3], gap="small")
+        # Assigned type="tertiary" here so they snap mathematically to exactly 48px squares!
         with col_m1:
-            st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset")
+            st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset", type="tertiary")
         with col_m2:
-            st.button("✨", key="btn_man", on_click=set_mode, args=("MANIFEST",), disabled=(mode == "MANIFEST"), help="MANIFEST Preset")
+            st.button("✨", key="btn_man", on_click=set_mode, args=("MANIFEST",), disabled=(mode == "MANIFEST"), help="MANIFEST Preset", type="tertiary")
         with col_m3:
-            st.button("⚙️", key="btn_cus", on_click=set_mode, args=("Custom",), disabled=(mode == "Custom"), help="Custom Configuration")
+            st.button("⚙️", key="btn_cus", on_click=set_mode, args=("Custom",), disabled=(mode == "Custom"), help="Custom Configuration", type="tertiary")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -312,7 +339,7 @@ with tab1:
                 label_visibility="collapsed"
             )
         
-        t1, t2, t3 = st.columns([1, 1, 1.5])
+        t1, t2, t3 = st.columns([1, 1.2, 1.4])
         with t1:
             hour_val = st.selectbox("Hr", options=list(range(1, 13)), key="hour", label_visibility="collapsed")
         with t2:
@@ -341,7 +368,6 @@ with tab1:
     
     st.divider()
     
-    # Bottom alignment forces the Generate, Refresh, and Camera items to visually anchor perfectly
     col_gen, col_ref, col_cam, col_spacer = st.columns([3, 1, 1, 5], gap="small", vertical_alignment="bottom")
     
     with col_gen:
@@ -350,13 +376,53 @@ with tab1:
             
     if st.session_state.schedule_generated:
         with col_ref:
+            # Type is tertiary, rendering a perfect 48x48 square matching the config modes
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            # Native markdown prevents hidden wrappers from shifting the button downwards
-            st.markdown(f"""
-            <button id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</button>
-            """, unsafe_allow_html=True)
+            # Self-contained Camera Script executed natively within the HTML bounds
+            st.html(f"""
+            <div style="display: flex; height: 48px; align-items: flex-end; justify-content: flex-start; padding-bottom: 0px;">
+                <button id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</button>
+            </div>
+            <script>
+                (function() {{
+                    function attachCameraEvent() {{
+                        const doc = window.parent.document || document;
+                        const btn = doc.getElementById('capture-btn');
+                        
+                        if (btn && !btn.dataset.attached) {{
+                            btn.addEventListener('click', function(e) {{
+                                e.preventDefault();
+                                const target = doc.querySelector('[data-testid="stTable"]');
+                                if (target) {{
+                                    if (typeof html2canvas === 'undefined') {{
+                                        const script = document.createElement('script');
+                                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                                        script.onload = () => {{
+                                            html2canvas(target, {{ backgroundColor: '{theme["bg_color"]}', scale: 2 }}).then(canvas => {{
+                                                const link = document.createElement('a'); link.download = 'TMS_Schedule.png'; link.href = canvas.toDataURL(); link.click();
+                                            }});
+                                        }};
+                                        doc.head.appendChild(script);
+                                    }} else {{
+                                        html2canvas(target, {{ backgroundColor: '{theme["bg_color"]}', scale: 2 }}).then(canvas => {{
+                                            const link = document.createElement('a'); link.download = 'TMS_Schedule.png'; link.href = canvas.toDataURL(); link.click();
+                                        }});
+                                    }}
+                                }} else {{
+                                    alert('Table not found.');
+                                }}
+                            }});
+                            btn.dataset.attached = 'true';
+                        }} else if (!btn) {{
+                            setTimeout(attachCameraEvent, 500);
+                        }}
+                    }}
+                    attachCameraEvent();
+                }})();
+            </script>
+            """)
             
         tracker_data = []
         current_time = start_dt
@@ -465,66 +531,3 @@ with tab2:
                 data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
                 current_pct += step_pct
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
-
-# ==========================================
-# SILENT BACKEND DOM SCRIPT RUNNER (PURE NATIVE ST.HTML)
-# ==========================================
-st.html("""
-<script>
-    // 1. Live Clock Runner directly targeting DOM
-    function updateClock() {
-        const d = document.getElementById('dom-date');
-        const t = document.getElementById('dom-time');
-        if (d && t) {
-            const now = new Date();
-            d.innerText = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            t.innerText = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
-        }
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    // 2. Camera Capture Integration Runner directly targeting DOM
-    function runCanvas(target) {
-        html2canvas(target, {
-            backgroundColor: null,
-            scale: 2,
-            onclone: function(cloned) {
-                const cells = cloned.querySelectorAll('th, td');
-                cells.forEach(c => { c.style.fontFamily = 'Arial, sans-serif'; c.style.whiteSpace = 'nowrap'; });
-            }
-        }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = 'TMS_Schedule.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        });
-    }
-
-    function attachCamera() {
-        const btn = document.getElementById('capture-btn');
-        if (btn && !btn.dataset.attached) {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = document.querySelector('[data-testid="stTable"]');
-                if (target) {
-                    if (typeof html2canvas === 'undefined') {
-                        const script = document.createElement('script');
-                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-                        script.onload = () => runCanvas(target);
-                        document.head.appendChild(script);
-                    } else {
-                        runCanvas(target);
-                    }
-                } else {
-                    alert('Table not found.');
-                }
-            });
-            btn.dataset.attached = 'true';
-        } else if (!btn) {
-            setTimeout(attachCamera, 500);
-        }
-    }
-    attachCamera();
-</script>
-""")
