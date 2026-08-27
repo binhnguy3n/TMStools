@@ -87,11 +87,19 @@ st.markdown("""
     [data-testid="stTable"] th { background-color: #FAFAFA !important; border-bottom: 3px solid #1E1E1E !important; font-weight: 900 !important; }
     [data-testid="stTable"] td, [data-testid="stTable"] th { padding: 12px 10px !important; font-weight: 700; color: #1E1E1E; }
     [data-testid="stTable"] tr { border-bottom: 2px solid #F3F4F6 !important; }
+
+    /* Target the Horizontal container of the Next Session Banner so it styles the whole row including the button */
+    div[data-testid="stHorizontalBlock"]:has(.banner-text-target) {
+        background-color: #E6FFFA !important; border: 3px solid #1E1E1E !important;
+        box-shadow: 5px 5px 0px #00A389 !important; border-radius: 8px !important;
+        padding: 8px 16px !important; align-items: center !important;
+        margin-top: -5px !important; margin-bottom: 25px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# LIVE DATE/TIME BANNER (Centered & Solid)
+# LIVE DATE/TIME BANNER
 # ==========================================
 components.html("""
 <style>
@@ -99,7 +107,7 @@ components.html("""
     body { margin: 0; padding: 5px; font-family: 'Nunito', sans-serif; background-color: transparent; }
     .banner {
         background-color: #FAFAFA; border-radius: 8px; padding: 16px 20px;
-        display: flex; justify-content: center; align-items: center; gap: 40px; /* Centers text with a gap */
+        display: flex; justify-content: center; align-items: center; gap: 40px; 
         border: 3px solid #1E1E1E; color: #1E1E1E; box-shadow: 5px 5px 0px #FF6B6B;
     }
     .date { font-size: 18px; font-weight: 700; color: #1E1E1E; }
@@ -225,12 +233,18 @@ with tab1:
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
-        # 80s Styled Next Session Banner (Centered Text)
-        status_banner.markdown(f"""
-        <div style="background-color: #E6FFFA; border: 3px solid #1E1E1E; box-shadow: 5px 5px 0px #00A389; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: #1E1E1E; font-weight: 800; text-align: center; font-size: 18px;">
-            {banner_msg}
-        </div>
-        """, unsafe_allow_html=True)
+        # Builds the banner with text centered and the refresh button hugging the right edge
+        with status_banner.container():
+            col_spacer, col_text, col_ref = st.columns([0.15, 0.7, 0.15])
+            
+            with col_spacer:
+                st.empty()
+                
+            with col_text:
+                st.markdown(f"<div class='banner-text-target' style='color: #1E1E1E; font-weight: 800; text-align: center; font-size: 18px; margin-top: 4px;'>{banner_msg}</div>", unsafe_allow_html=True)
+            
+            with col_ref:
+                st.button("🔄", key="refresh_banner", help="Refresh Highlight")
             
         def highlight_custom_cells(x):
             df_style = pd.DataFrame('', index=x.index, columns=x.columns)
@@ -253,48 +267,39 @@ with tab1:
         
         st.table(styled_df)
         
-        # Action Buttons below table
-        col_ref, col_cam, col_cap = st.columns([0.13, 0.13, 0.74])
-        with col_ref:
-            st.button("🔄", key="refresh_banner", help="Refresh Highlight")
-            
-        with col_cam:
-            # Custom component to properly execute html2canvas for taking a picture of the DOM
-            components.html("""
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-            <style>
-                body { margin: 0; padding: 0; }
-                .camera-btn {
-                    background-color: white; color: #1E1E1E; border: 3px solid #1E1E1E; border-radius: 8px;
-                    width: 42px; height: 42px; font-size: 20px; box-shadow: 3px 3px 0px #1E1E1E; 
-                    cursor: pointer; transition: all 0.1s ease; display: flex; align-items: center; justify-content: center;
-                }
-                .camera-btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px #1E1E1E; }
-            </style>
-            <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷</button>
-            <script>
-                function takePic() {
-                    try {
-                        const target = window.parent.document.querySelector('[data-testid="stTable"]');
-                        if (target) {
-                            html2canvas(target, {backgroundColor: '#ffffff', scale: 2}).then(canvas => {
-                                const link = document.createElement('a');
-                                link.download = 'TMS_Schedule.png';
-                                link.href = canvas.toDataURL();
-                                link.click();
-                            });
-                        } else {
-                            alert('Table not found.');
-                        }
-                    } catch (e) {
-                        alert('Browser security prevents capturing the image directly on the cloud. Please take a manual screenshot.');
+        # Standalone Camera Component below the table
+        components.html("""
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <style>
+            body { margin: 0; padding: 0; display: flex; justify-content: flex-start;}
+            .camera-btn {
+                background-color: white; color: #1E1E1E; border: 3px solid #1E1E1E; border-radius: 8px;
+                width: 42px; height: 42px; font-size: 20px; box-shadow: 3px 3px 0px #1E1E1E; 
+                cursor: pointer; transition: all 0.1s ease; display: flex; align-items: center; justify-content: center;
+            }
+            .camera-btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px #1E1E1E; }
+        </style>
+        <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷</button>
+        <script>
+            function takePic() {
+                try {
+                    const target = window.parent.document.querySelector('[data-testid="stTable"]');
+                    if (target) {
+                        html2canvas(target, {backgroundColor: '#ffffff', scale: 2}).then(canvas => {
+                            const link = document.createElement('a');
+                            link.download = 'TMS_Schedule.png';
+                            link.href = canvas.toDataURL();
+                            link.click();
+                        });
+                    } else {
+                        alert('Table not found.');
                     }
+                } catch (e) {
+                    alert('Browser security prevents capturing the image directly on the cloud. Please take a manual screenshot.');
                 }
-            </script>
-            """, height=50)
-            
-        with col_cap:
-            st.caption("The current block is highlighted in green. The banner at the top updates the moment a session starts.")
+            }
+        </script>
+        """, height=60)
 
 # ==========================================
 # TAB 2: PERCENTAGE CALCULATOR
