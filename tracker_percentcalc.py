@@ -512,15 +512,36 @@ with tab2:
     if known_pct > 0:
         base_value = known_val / (known_pct / 100)
         step_value = base_value * (step_pct / 100)
-        st.info(f"**Base Value (100%):** {base_value:g} &nbsp;&nbsp;|&nbsp;&nbsp; **{step_pct:g}% increment:** {step_value:g}", icon="💡")
+        st.info(f"**Base Value (100%):** {int(round(base_value))} &nbsp;&nbsp;|&nbsp;&nbsp; **{step_pct:g}% increment:** {step_value:g}", icon="💡")
         
         data = []
         current_pct = start_pct
         if step_pct > 0 and (end_pct - start_pct) / step_pct <= 1000:
             while current_pct <= end_pct:
-                data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
+                # Mathematical rounding applied to table outputs!
+                rounded_val = int(round(base_value * (current_pct / 100)))
+                data.append({"Percentage": f"{current_pct:g}%", "Value": rounded_val})
                 current_pct += step_pct
-            st.table(pd.DataFrame(data).style.hide(axis="index"))
+                
+            # Custom Pandas Styler for Zebra Striping the Percentage Table
+            def highlight_pct_cells(x):
+                df_style = pd.DataFrame('', index=x.index, columns=x.columns)
+                for row_num, r in enumerate(x.index):
+                    for c in x.columns:
+                        style_str = ""
+                        if row_num % 2 == 1:
+                            style_str += f"background-color: {theme['zebra_bg']}; "
+                        else:
+                            style_str += f"background-color: {theme['panel_bg']}; "
+                            
+                        if c == "Percentage":
+                            style_str += f"color: {theme['session_col']}; font-weight: 900;" 
+                        else:
+                            style_str += f"color: {theme['text_main']}; font-weight: 700;"
+                        df_style.at[r, c] = style_str
+                return df_style
+
+            st.table(pd.DataFrame(data).style.apply(highlight_pct_cells, axis=None).hide(axis="index"))
 
 # ==========================================
 # TAB 3: PROTOCOL LIBRARY
@@ -627,7 +648,6 @@ with tab3:
 st.html(f"""
 <script>
     (function() {{
-        // Live Clock logic matching Python seconds string format!
         function updateClock() {{
             const doc = window.parent.document || document;
             const d = doc.getElementById('python-time');
@@ -638,7 +658,6 @@ st.html(f"""
         }}
         setInterval(updateClock, 1000);
 
-        // Camera Logic
         function attachCamera() {{
             let doc = document;
             try {{ doc = window.parent.document || document; }} catch(e) {{}}
