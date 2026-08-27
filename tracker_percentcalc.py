@@ -82,7 +82,7 @@ else:
         "btn_primary_bg": "#FF6B6B",
         "btn_primary_shadow": "#1E1E1E",
         "btn_primary_text": "#FFFFFF",
-        "btn_sec_shadow": "#374151",  # Dark Slate Gray Shadow for Theme Toggle & Tabs!
+        "btn_sec_shadow": "#374151",
         "btn_sec_hover": "#F3F4F6",
         "active_config_bg": "#FFE66D",
         "active_config_text": "#1E1E1E",
@@ -136,8 +136,19 @@ st.markdown(f"""
     button[kind="primary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="primary"]:hover {{ filter: brightness(1.1); }}
 
-    /* Secondary buttons (Config Modes, Refresh, Camera) - STRICTLY LOCKED 48x48 SQUARES */
+    /* Secondary buttons (Theme Toggle ONLY) -> Keeps text wide dynamically */
     button[kind="secondary"] {{
+        background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
+        border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
+        border: 3px solid {theme['border']} !important; height: 48px !important; padding: 0 16px !important; margin: 0 !important;
+        box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important;
+        width: max-content !important;
+    }}
+    button[kind="secondary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
+    button[kind="secondary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
+
+    /* Tertiary buttons (Config Modes, Refresh, Camera) - STRICTLY LOCKED 48x48 SQUARES */
+    button[kind="tertiary"] {{
         background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 22px !important;
         border: 3px solid {theme['border']} !important; 
@@ -147,26 +158,15 @@ st.markdown(f"""
         box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
     }}
-    button[kind="secondary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
-    button[kind="secondary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
+    button[kind="tertiary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
+    button[kind="tertiary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
 
-    /* Active Secondary (Disabled Config Button) */
-    button[kind="secondary"]:disabled {{
+    /* Active Tertiary Button (Disabled Config Button Mode) */
+    button[kind="tertiary"]:disabled {{
         background-color: {theme['active_config_bg']} !important; color: {theme['active_config_text']} !important;
         transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important;
         opacity: 1 !important; cursor: default !important; border-color: {theme['border']} !important;
     }}
-
-    /* Tertiary button (Theme Toggle ONLY) -> Keeps text wide dynamically */
-    button[kind="tertiary"] {{
-        background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
-        border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
-        border: 3px solid {theme['border']} !important; height: 48px !important; padding: 0 16px !important; margin: 0 !important;
-        box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important;
-        width: max-content !important;
-    }}
-    button[kind="tertiary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
-    button[kind="tertiary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
 
     /* Preset Info Boxes */
     div[data-testid="stAlert"] {{
@@ -189,16 +189,16 @@ st.markdown(f"""
         overflow: visible !important; 
     }}
     
-    /* 3. Give the list container physical room for the shadow */
+    /* 3. Give the list container gap spacing and physical room for the shadow */
     div[data-testid="stTabs"] [data-baseweb="tab-list"] {{ 
         gap: 16px !important; padding-bottom: 25px !important; padding-top: 5px !important;
     }}
     
-    /* 4. The Tab Headers - Targeted universally inside the tab list */
+    /* 4. The Tab Headers */
     div[data-testid="stTabs"] [data-baseweb="tab-list"] button {{ 
         background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
         padding: 8px 24px !important; box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; 
-        margin: 0px 8px 15px 0px !important; /* Critical margin ensures shadow renders */
+        margin: 0px 8px 15px 0px !important; 
         min-width: fit-content !important; height: auto !important; 
     }}
     div[data-testid="stTabs"] [data-baseweb="tab-list"] button:hover {{ 
@@ -242,14 +242,13 @@ with col_title:
 with col_toggle:
     st.markdown("<br>", unsafe_allow_html=True) 
     btn_text = "☀️ Light Mode" if is_synthwave else "🕶️ Synthwave"
-    # Tertiary type allows the theme toggle text to breathe properly without squishing
-    st.button(btn_text, on_click=toggle_theme, key="theme_btn", type="tertiary")
+    # Secondary type isolates it so it can stay wide dynamically!
+    st.button(btn_text, on_click=toggle_theme, key="theme_btn", type="secondary")
 
 
 # ==========================================
 # 2. BULLETPROOF CLOCK BANNER (100% Python Native!)
 # ==========================================
-# Grabbing exact local time instantly on every app interaction
 clock_now = datetime.now(timezone.utc) + timedelta(hours=st.session_state.tz_offset)
 current_date_str = clock_now.strftime("%A, %B %d, %Y")
 current_time_str = clock_now.strftime("%I:%M %p").lstrip("0")
@@ -289,15 +288,14 @@ with tab1:
         st.write("##### Configuration Mode")
         mode = st.session_state.mode
         
-        # Reduced gap spacing to bring the buttons closer together
-        col_m1, col_m2, col_m3, col_mspace = st.columns([1, 1, 1, 6], gap="small")
-        # Assigned type="secondary" here so they snap mathematically to exactly 48x48 squares!
+        # Switched Config Modes to 'tertiary' type to snap perfectly into 48x48 squares!
+        col_m1, col_m2, col_m3, col_mspace = st.columns([1, 1, 1, 4], gap="small")
         with col_m1:
-            st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset", type="secondary")
+            st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset", type="tertiary")
         with col_m2:
-            st.button("✨", key="btn_man", on_click=set_mode, args=("MANIFEST",), disabled=(mode == "MANIFEST"), help="MANIFEST Preset", type="secondary")
+            st.button("✨", key="btn_man", on_click=set_mode, args=("MANIFEST",), disabled=(mode == "MANIFEST"), help="MANIFEST Preset", type="tertiary")
         with col_m3:
-            st.button("⚙️", key="btn_cus", on_click=set_mode, args=("Custom",), disabled=(mode == "Custom"), help="Custom Configuration", type="secondary")
+            st.button("⚙️", key="btn_cus", on_click=set_mode, args=("Custom",), disabled=(mode == "Custom"), help="Custom Configuration", type="tertiary")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -343,7 +341,7 @@ with tab1:
     
     st.divider()
     
-    # Bottom alignment securely aligns the primary button and the icon buttons perfectly
+    # Bottom alignment forces the Generate, Refresh, and Camera items to visually anchor perfectly
     col_gen, col_ref, col_cam, col_spacer = st.columns([3, 1, 1, 5], gap="small", vertical_alignment="bottom")
     
     with col_gen:
@@ -352,12 +350,12 @@ with tab1:
             
     if st.session_state.schedule_generated:
         with col_ref:
-            # Type is secondary, locking it perfectly to 48x48 like the config modes
-            st.button("🔄", help="Update the active highlight", type="secondary")
+            # Type is tertiary, locking it perfectly to 48x48 like the config modes
+            st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            # Replaced custom HTML with a native st.button for flawless Streamlit grid alignment!
-            st.button("📷", key="cam_btn", type="secondary", help="Download Schedule Image")
+            # Type is tertiary, locking it perfectly to 48x48
+            st.button("📷", key="cam_btn", type="tertiary", help="Download Schedule Image")
             
         tracker_data = []
         current_time = start_dt
