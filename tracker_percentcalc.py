@@ -102,8 +102,6 @@ st.markdown(f"""
     
     .stApp {{ background-color: {theme['bg_color']} !important; }}
     h1, h2, h3, h4, h5, h6 {{ color: {theme['text_header']} !important; }}
-    
-    /* Removed the global 'span' override so inline text colors work again! */
     p, label, li {{ color: {theme['text_main']} !important; }}
     
     /* Inputs */
@@ -199,8 +197,6 @@ st.markdown(f"""
     }}
     [data-testid="stTable"] table {{ width: 100% !important; border-collapse: collapse !important; }}
     [data-testid="stTable"] th {{ background-color: {theme['panel_bg']} !important; border-bottom: 3px solid {theme['border']} !important; font-weight: 900 !important; white-space: nowrap !important; color: {theme['text_header']} !important; }}
-    
-    /* Removed text_main override here so inline Pandas Styler colors can shine through */
     [data-testid="stTable"] td, [data-testid="stTable"] th {{ padding: 12px 10px !important; font-weight: 700; white-space: nowrap !important;}}
 </style>
 """, unsafe_allow_html=True)
@@ -218,7 +214,7 @@ with col_toggle:
 
 
 # ==========================================
-# 2. CLOCK BANNER (Self-Contained Iframe to guarantee JS load)
+# 2. CLOCK BANNER
 # ==========================================
 components.html(f"""
 <style>
@@ -248,7 +244,14 @@ components.html(f"""
 
 
 # ==========================================
-# 3. TABS
+# 3. NEXT SESSION BANNER (Placed directly below clock)
+# ==========================================
+# Keeping this globally available above the tabs means it stays locked below the timer banner at all times
+status_banner = st.empty()
+
+
+# ==========================================
+# 4. TABS
 # ==========================================
 tab1, tab2 = st.tabs(["⏱️ Session Tracker", "📊 Percentage Calculator"])
 
@@ -319,7 +322,8 @@ with tab1:
     
     st.divider()
     
-    col_gen, col_ref, col_cam, col_spacer = st.columns([4.0, 1.0, 1.0, 10.0], gap="small")
+    # Adjusted ratios to give the Camera column more horizontal breathing room
+    col_gen, col_ref, col_cam, col_spacer = st.columns([3.5, 0.8, 1.5, 10.0], gap="small")
     
     with col_gen:
         if st.button("Generate Schedule", type="primary"):
@@ -330,12 +334,12 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            # Self-contained iframe for the camera button to avoid sandbox issues
+            # Added 12px body padding and increased height to 75 so the drop shadow never hits the invisible iframe wall
             components.html(f"""
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
             <style>
                 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
-                body {{ margin: 0; padding: 4px; display: flex; align-items: flex-start; justify-content: flex-start; font-family: 'Nunito', sans-serif; background: transparent;}}
+                body {{ margin: 0; padding: 12px; display: flex; align-items: flex-start; justify-content: flex-start; font-family: 'Nunito', sans-serif; background: transparent;}}
                 .camera-btn {{
                     background-color: {theme['panel_bg']}; color: {theme['border']}; border: 3px solid {theme['border']}; border-radius: 8px;
                     width: 42px; height: 42px; font-size: 20px; box-shadow: 4px 4px 0px {theme['border']}; 
@@ -376,10 +380,7 @@ with tab1:
                     }}
                 }}
             </script>
-            """, height=60)
-            
-        # Place the Next Session Status Banner directly above the generated table
-        status_banner = st.empty()
+            """, height=75)
             
         tracker_data = []
         current_time = start_dt
@@ -422,8 +423,9 @@ with tab1:
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
+        # Send the banner text back up the page to the global placeholder below the clock!
         status_banner.markdown(f"""
-        <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: 15px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
+        <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
             {banner_msg}
         </div>
         """, unsafe_allow_html=True)
