@@ -529,7 +529,31 @@ with tab3:
     </div>
     """, unsafe_allow_html=True)
 
-    st.write("##### Prominent Research & Experimental Protocols")
+    st.write("##### Prominent Research & Accelerated Protocols")
+    
+    st.markdown(f"""
+    <div style="background-color: {theme['panel_bg']}; border: 3px solid {theme['border']}; border-radius: 8px; padding: 20px; box-shadow: 5px 5px 0px {theme['shadow_2']}; margin-bottom: 20px;">
+        <h4 style="color: {theme['text_header']}; margin-top: 0; font-family: 'Nunito', sans-serif;">🧲 MAGNETS Trial Protocol</h4>
+        <p style="color: {theme['text_main']}; font-family: 'Nunito', sans-serif;"><strong>Target:</strong> Left or Right Hemisphere<br>
+        <strong>Condition:</strong> Posttraumatic Stress Disorder (PTSD)<br>
+        <strong>Parameters:</strong> 10 Sessions • 10m Stim • 50m Interval. Accelerated therapeutic protocol investigating precision medicine techniques and resting-state functional connectivity.</p>
+        <div style="background-color: {theme['bg_color']}; border: 2px solid {theme['border']}; border-radius: 6px; padding: 12px; font-size: 14px; color: {theme['text_main']}; font-family: 'Nunito', sans-serif;">
+            <strong>Citation:</strong> Quinn, D. (2023-2028). <em>Multimodal Image Analysis and Guidance of Neuromodulation for Trauma-Related Symptoms (MAGNETS)</em>. University of New Mexico CONSCePT Lab / US Department of Defense.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div style="background-color: {theme['panel_bg']}; border: 3px solid {theme['border']}; border-radius: 8px; padding: 20px; box-shadow: 5px 5px 0px {theme['shadow_2']}; margin-bottom: 20px;">
+        <h4 style="color: {theme['text_header']}; margin-top: 0; font-family: 'Nunito', sans-serif;">✨ MANIFEST Trial Protocol</h4>
+        <p style="color: {theme['text_main']}; font-family: 'Nunito', sans-serif;"><strong>Target:</strong> Investigational (Sham-controlled)<br>
+        <strong>Condition:</strong> Neurological Symptoms of Long COVID<br>
+        <strong>Parameters:</strong> 5 Sessions per day • 10m Stim • 40m Interval. An accelerated TMS protocol spread over 10 days (50 total treatments) to address neural inflammatory factors.</p>
+        <div style="background-color: {theme['bg_color']}; border: 2px solid {theme['border']}; border-radius: 6px; padding: 12px; font-size: 14px; color: {theme['text_main']}; font-family: 'Nunito', sans-serif;">
+            <strong>Citation:</strong> Quinn, D. <em>Magnetic Resonance Analysis of Neural Inflammatory Factors and External Stimulation (MANIFEST)</em>. University of New Mexico CONSCePT Lab.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown(f"""
     <div style="background-color: {theme['panel_bg']}; border: 3px solid {theme['border']}; border-radius: 8px; padding: 20px; box-shadow: 5px 5px 0px {theme['shadow_2']}; margin-bottom: 20px;">
@@ -541,7 +565,6 @@ with tab3:
         </div>
     </div>
     """, unsafe_allow_html=True)
-
 
 # ==========================================
 # SILENT BACKEND DOM SCRIPT RUNNER (CAMERA INTEGRATION)
