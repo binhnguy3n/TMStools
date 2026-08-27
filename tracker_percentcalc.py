@@ -100,7 +100,6 @@ st.markdown(f"""
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
     html, body, [class*="css"] {{ font-family: 'Nunito', sans-serif !important; }}
     
-    /* Dynamic Backgrounds */
     .stApp {{ background-color: {theme['bg_color']} !important; }}
     h1, h2, h3, h4, h5, h6 {{ color: {theme['text_header']} !important; }}
     p, label, li, span {{ color: {theme['text_main']} !important; }}
@@ -152,6 +151,18 @@ st.markdown(f"""
     button[kind="tertiary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px {theme['border']} !important; }}
     button[kind="tertiary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
 
+    /* Custom Native Camera Anchor Button */
+    .camera-btn {{
+        background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
+        border-radius: 8px !important; font-weight: 900 !important; font-size: 20px !important;
+        border: 3px solid {theme['border']} !important; width: 42px !important; height: 42px !important; padding: 0 !important; margin: 0 !important;
+        box-shadow: 4px 4px 0px {theme['border']} !important; transition: all 0.1s ease !important;
+        display: inline-flex !important; align-items: center !important; justify-content: center !important;
+        text-decoration: none !important; cursor: pointer !important; box-sizing: border-box !important;
+    }}
+    .camera-btn:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px {theme['border']} !important; }}
+    .camera-btn:hover {{ background-color: {theme['btn_sec_hover']} !important; color: {theme['border']} !important; }}
+
     /* Preset Info Boxes */
     div[data-testid="stAlert"] {{
         border-radius: 8px !important; background-color: {theme['panel_bg']} !important;
@@ -175,34 +186,14 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# LIVE DATE/TIME BANNER
+# NATIVE DOM DATE/TIME BANNER
 # ==========================================
-components.html(f"""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
-    body {{ margin: 0; padding: 5px; font-family: 'Nunito', sans-serif; background-color: transparent; }}
-    .banner {{
-        background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px;
-        display: flex; justify-content: center; align-items: center; gap: 40px; 
-        border: 3px solid {theme['border']}; color: {theme['text_main']}; box-shadow: 5px 5px 0px {theme['clock_shadow']};
-    }}
-    .date {{ font-size: 18px; font-weight: 700; color: {theme['text_main']}; }}
-    .time {{ font-size: 22px; font-weight: 900; color: {theme['time_col']}; }}
-</style>
-<div class="banner">
-    <div class="date" id="date"></div>
-    <div class="time" id="time"></div>
+st.markdown(f"""
+<div style="background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px; display: flex; justify-content: center; align-items: center; gap: 40px; border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px;">
+    <div id="dom-date" style="font-size: 18px; font-weight: 700; color: {theme['text_main']};"></div>
+    <div id="dom-time" style="font-size: 22px; font-weight: 900; color: {theme['time_col']};"></div>
 </div>
-<script>
-    function updateClock() {{
-        const now = new Date();
-        document.getElementById('date').innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
-        document.getElementById('time').innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
-    }}
-    setInterval(updateClock, 1000); updateClock();
-</script>
-""", height=90)
-
+""", unsafe_allow_html=True)
 
 col_title, col_toggle = st.columns([3, 1])
 with col_title:
@@ -292,54 +283,12 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            # Increased height, added padding to prevent clipping, and explicitly centered the button content
-            components.html(f"""
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-            <style>
-                @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
-                body {{ margin: 0; padding: 4px; display: flex; align-items: flex-start; justify-content: flex-start; font-family: 'Nunito', sans-serif; background: transparent;}}
-                .camera-btn {{
-                    background-color: {theme['panel_bg']}; color: {theme['border']}; border: 3px solid {theme['border']}; border-radius: 8px;
-                    width: 42px; height: 42px; font-size: 20px; box-shadow: 4px 4px 0px {theme['border']}; 
-                    cursor: pointer; transition: all 0.1s ease; 
-                    display: flex; align-items: center; justify-content: center;
-                    padding: 0; margin: 0; box-sizing: border-box; line-height: 1;
-                }}
-                .camera-btn:active {{ transform: translate(4px, 4px); box-shadow: 0px 0px 0px {theme['border']}; }}
-                .camera-btn:hover {{ filter: brightness(1.2); }}
-            </style>
-            <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷</button>
-            <script>
-                function takePic() {{
-                    try {{
-                        const target = window.parent.document.querySelector('[data-testid="stTable"]');
-                        if (target) {{
-                            html2canvas(target, {{
-                                backgroundColor: '{theme["bg_color"]}', 
-                                scale: 2,
-                                onclone: function (clonedDoc) {{
-                                    const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
-                                    cells.forEach(cell => {{
-                                        cell.style.fontFamily = 'Arial, sans-serif';
-                                        cell.style.letterSpacing = 'normal';
-                                        cell.style.whiteSpace = 'nowrap';
-                                    }});
-                                }}
-                            }}).then(canvas => {{
-                                const link = document.createElement('a');
-                                link.download = 'TMS_Schedule.png';
-                                link.href = canvas.toDataURL();
-                                link.click();
-                            }});
-                        }} else {{
-                            alert('Table not found.');
-                        }}
-                    }} catch (e) {{
-                        alert('Browser security prevents capturing the image directly. Please take a manual screenshot.');
-                    }}
-                }}
-            </script>
-            """, height=60)
+            # Fully Native Anchor tag for exact alignment, no iframes
+            st.markdown("""
+            <div style="display: flex; height: 42px; align-items: center;">
+                <a id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</a>
+            </div>
+            """, unsafe_allow_html=True)
             
         tracker_data = []
         current_time = start_dt
@@ -393,7 +342,6 @@ with tab1:
             for row_num, r in enumerate(x.index):
                 for c in x.columns:
                     style_str = ""
-                    
                     if r == active_idx:
                         style_str += f"background-color: {theme['active_row_bg']}; "
                         if c == "Session":
@@ -415,7 +363,6 @@ with tab1:
             return df_style
 
         styled_df = pd.DataFrame(tracker_data).style.apply(highlight_custom_cells, axis=None).hide(axis="index")
-        
         st.table(styled_df)
 
 # ==========================================
@@ -449,3 +396,66 @@ with tab2:
                 data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
                 current_pct += step_pct
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
+
+# ==========================================
+# SILENT BACKEND DOM SCRIPT RUNNER
+# ==========================================
+components.html(f"""
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    // 1. Unified Clock Logic (targets the native DOM elements)
+    function updateClock() {{
+        const now = new Date();
+        const parentDoc = window.parent.document;
+        const dateEl = parentDoc.getElementById('dom-date');
+        const timeEl = parentDoc.getElementById('dom-time');
+        
+        if (dateEl && timeEl) {{
+            dateEl.innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
+            timeEl.innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
+        }}
+    }}
+    setInterval(updateClock, 1000);
+    updateClock();
+    
+    // 2. Camera Button Logic (attaches event listener natively)
+    function attachCameraEvent() {{
+        const parentDoc = window.parent.document;
+        const btn = parentDoc.getElementById('capture-btn');
+        
+        if (btn) {{
+            if (!btn.hasAttribute('data-attached')) {{
+                btn.addEventListener('click', function(e) {{
+                    e.preventDefault();
+                    const target = parentDoc.querySelector('[data-testid="stTable"]');
+                    if (target) {{
+                        html2canvas(target, {{
+                            backgroundColor: '{theme["bg_color"]}', 
+                            scale: 2,
+                            onclone: function (clonedDoc) {{
+                                const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
+                                cells.forEach(cell => {{
+                                    cell.style.fontFamily = 'Arial, sans-serif';
+                                    cell.style.letterSpacing = 'normal';
+                                    cell.style.whiteSpace = 'nowrap';
+                                }});
+                            }}
+                        }}).then(canvas => {{
+                            const link = document.createElement('a');
+                            link.download = 'TMS_Schedule.png';
+                            link.href = canvas.toDataURL();
+                            link.click();
+                        }});
+                    }} else {{
+                        alert('Table not found.');
+                    }}
+                }});
+                btn.setAttribute('data-attached', 'true');
+            }}
+        }} else {{
+            setTimeout(attachCameraEvent, 500);
+        }}
+    }}
+    attachCameraEvent();
+</script>
+""", height=0, width=0)
