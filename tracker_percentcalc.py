@@ -173,7 +173,7 @@ st.markdown(f"""
        COMPLETELY CUSTOMIZED BRUTALIST UI TABS 
        ---------------------------------------------------- */
        
-    /* 1. Nuke ALL Streamlit native tab decorations */
+    /* 1. Nuke ALL Streamlit native tab decorations safely */
     .stTabs [data-baseweb="tab-highlight"],
     .stTabs [data-baseweb="tab-border"],
     .stTabs [data-testid="stTabBorder"] {{
@@ -190,8 +190,8 @@ st.markdown(f"""
         overflow: visible !important;
     }}
     
-    /* 3. The Tabs (Targeting the buttons strictly) */
-    .stTabs button[data-baseweb="tab"] {{ 
+    /* 3. The Tabs (Globally targeting the tab elements to beat Streamlit's updates) */
+    .stTabs [data-baseweb="tab"] {{ 
         background-color: {theme['panel_bg']} !important;
         border: 3px solid {theme['border']} !important;
         border-radius: 8px !important;
@@ -202,15 +202,15 @@ st.markdown(f"""
         box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important;
         transition: all 0.1s ease !important;
         margin: 0 !important; 
-        min-width: fit-content !important; /* Prevents text squishing */
+        min-width: fit-content !important; 
         height: auto !important;
     }}
-    .stTabs button[data-baseweb="tab"]:hover {{
+    .stTabs [data-baseweb="tab"]:hover {{
         background-color: {theme['btn_sec_hover']} !important;
     }}
     
-    /* 4. The Active Tab */
-    .stTabs button[data-baseweb="tab"][aria-selected="true"] {{ 
+    /* 4. The Active Tab - Removed the translation shift so it no longer clips! */
+    .stTabs [aria-selected="true"] {{ 
         background-color: {theme['btn_primary_bg']} !important; 
         color: {theme['btn_primary_text']} !important;
         box-shadow: 0px 0px 0px transparent !important; 
@@ -219,7 +219,7 @@ st.markdown(f"""
     }}
     
     /* Ensure emoji and text within tabs inherit the bold font */
-    .stTabs button[data-baseweb="tab"] p, .stTabs button[data-baseweb="tab"] span {{
+    .stTabs [data-baseweb="tab"] p, .stTabs [data-baseweb="tab"] span {{
         font-weight: 900 !important;
     }}
     
@@ -287,10 +287,10 @@ with tab1:
         with col_btn:
             st.button("🕒 Now", on_click=set_time_to_now, type="primary")
         with col_tz:
+            # Removed index assignment to fix Streamlit console warning!
             st.selectbox(
                 "Local TZ Offset", 
                 options=[i for i in range(-12, 13)], 
-                index=6, 
                 format_func=lambda x: f"UTC{'+' if x >= 0 else ''}{x}", 
                 key="tz_offset",
                 label_visibility="collapsed"
@@ -448,17 +448,16 @@ with tab2:
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
 
 # ==========================================
-# SILENT BACKEND DOM SCRIPT RUNNER
+# SILENT BACKEND DOM SCRIPT RUNNER (REPLACED COMPONENTS API)
 # ==========================================
 st.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-    // Clock Logic
+    // Clock Logic - Bypasses CORS by directly targeting document
     function updateClock() {{
         const now = new Date();
-        const parentDoc = window.parent.document || document;
-        const dateEl = parentDoc.getElementById('dom-date');
-        const timeEl = parentDoc.getElementById('dom-time');
+        const dateEl = document.getElementById('dom-date');
+        const timeEl = document.getElementById('dom-time');
         
         if (dateEl && timeEl) {{
             dateEl.innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
@@ -470,14 +469,13 @@ st.html(f"""
     
     // Camera Logic
     function attachCameraEvent() {{
-        const parentDoc = window.parent.document || document;
-        const btn = parentDoc.getElementById('capture-btn');
+        const btn = document.getElementById('capture-btn');
         
         if (btn) {{
             if (!btn.hasAttribute('data-attached')) {{
                 btn.addEventListener('click', function(e) {{
                     e.preventDefault();
-                    const target = parentDoc.querySelector('[data-testid="stTable"]');
+                    const target = document.querySelector('[data-testid="stTable"]');
                     if (target) {{
                         html2canvas(target, {{
                             backgroundColor: '{theme["bg_color"]}', 
