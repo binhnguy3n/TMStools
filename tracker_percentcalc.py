@@ -177,41 +177,45 @@ st.markdown(f"""
        COMPLETELY CUSTOMIZED BRUTALIST UI TABS 
        ---------------------------------------------------- */
        
-    /* 1. Nuke ALL Streamlit native tab lines and wrappers */
-    div[data-testid="stTabIndicator"], 
-    .stTabs [data-baseweb="tab-highlight"], 
-    .stTabs [data-baseweb="tab-border"] {{
-        display: none !important; visibility: hidden !important; opacity: 0 !important;
+    /* 1. Nuke ALL Streamlit native tab decorations safely */
+    [data-testid="stTabIndicator"], .stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"], .stTabs [data-testid="stTabBorder"] {{
+        display: none !important; background-color: transparent !important; border: none !important; opacity: 0 !important; height: 0px !important; width: 0px !important; visibility: hidden !important;
     }}
     
-    /* 2. Override Streamlit's hidden overflow walls */
-    .stTabs, .stTabs > div, .stTabs [data-baseweb="tab-list"], .stTabs [data-baseweb="tab-list"] > div {{ 
+    /* 2. OVERRIDE STREAMLIT CLIPPING: Force all parent tab containers to show overflow */
+    .stTabs, .stTabs > div, .stTabs [data-baseweb="tab-list"] {{ 
         overflow: visible !important; 
     }}
     
-    /* 3. Padding for the tab track */
+    /* 3. Give the list container gap spacing and margin so the shadows don't clip */
     .stTabs [data-baseweb="tab-list"] {{ 
-        gap: 16px !important; padding-bottom: 20px !important; padding-top: 5px !important;
+        gap: 16px !important; padding-bottom: 15px !important; padding-left: 5px !important; padding-top: 5px !important;
     }}
     
-    /* 4. Target the generic buttons inside the tab component to guarantee the shadow renders */
-    .stTabs button {{ 
+    /* 4. Target ONLY the buttons inside the Tab Header container */
+    .stTabs [data-baseweb="tab-list"] button {{ 
         background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
         padding: 8px 20px !important; box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; 
-        margin: 0px 10px 12px 0px !important; /* Thick margins force the shadow to not be swallowed by the container */
+        margin: 0px 5px 8px 0px !important; /* Critical margin to stop shadow from getting trapped */
         min-width: fit-content !important; height: auto !important; overflow: visible !important;
     }}
-    .stTabs button:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
+    .stTabs [data-baseweb="tab-list"] button:hover {{ 
+        background-color: {theme['btn_sec_hover']} !important; 
+    }}
     
-    /* 5. The Active Tab - Translate the button itself */
-    .stTabs button[aria-selected="true"] {{ 
+    /* 5. The Active Tab - Press animation using transform */
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{ 
         background-color: {theme['btn_primary_bg']} !important; 
         box-shadow: 0px 0px 0px transparent !important; transform: translate(4px, 4px) !important; border-color: {theme['border']} !important;
     }}
     
-    /* Force exact bolding and colors on tab text */
-    .stTabs button p, .stTabs button span {{ font-weight: 900 !important; color: {theme['text_main']} !important; }}
-    .stTabs button[aria-selected="true"] p, .stTabs button[aria-selected="true"] span {{ color: {theme['btn_primary_text']} !important; }}
+    /* Force font styling natively on the headers */
+    .stTabs [data-baseweb="tab-list"] button p, .stTabs [data-baseweb="tab-list"] button span {{ 
+        font-weight: 900 !important; color: {theme['text_main']} !important;
+    }}
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] p, .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] span {{ 
+        color: {theme['btn_primary_text']} !important;
+    }}
     
     /* ---------------------------------------------------- */
     
@@ -239,39 +243,14 @@ with col_toggle:
 
 
 # ==========================================
-# 2. CLOCK BANNER (Uses Native st.html)
+# 2. CLOCK BANNER (Native Markdown)
 # ==========================================
-st.html(f"""
-<style>
-    .neo-banner {{
-        background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px;
-        display: flex; justify-content: center; align-items: center; gap: 40px; 
-        border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px;
-    }}
-    .neo-date {{ font-size: 18px; font-weight: 700; color: {theme['text_main']}; }}
-    .neo-time {{ font-size: 22px; font-weight: 900; color: {theme['time_col']}; }}
-</style>
-<div class="neo-banner">
-    <div class="neo-date" id="neo-date"></div>
-    <div class="neo-time" id="neo-time"></div>
+st.markdown(f"""
+<div style="background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px; display: flex; justify-content: center; align-items: center; gap: 40px; border: 3px solid {theme['border']}; box-shadow: 5px 5px 0px {theme['clock_shadow']}; margin-bottom: 25px;">
+    <div id="dom-date" style="font-size: 18px; font-weight: 700; color: {theme['text_main']};"></div>
+    <div id="dom-time" style="font-size: 22px; font-weight: 900; color: {theme['time_col']};"></div>
 </div>
-<script>
-    (function() {{
-        function updateClock() {{
-            const now = new Date();
-            const doc = window.parent.document || document;
-            const dateEl = doc.getElementById('neo-date');
-            const timeEl = doc.getElementById('neo-time');
-            if (dateEl && timeEl) {{
-                dateEl.innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
-                timeEl.innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
-            }}
-        }}
-        setInterval(updateClock, 1000); 
-        updateClock();
-    }})();
-</script>
-""")
+""", unsafe_allow_html=True)
 
 
 # ==========================================
@@ -365,11 +344,12 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            st.html(f"""
+            # Native anchor for camera
+            st.markdown(f"""
             <div style="display: flex; width: 56px; height: 56px; align-items: flex-start; justify-content: flex-start;">
                 <a id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</a>
             </div>
-            """)
+            """, unsafe_allow_html=True)
             
         tracker_data = []
         current_time = start_dt
@@ -480,12 +460,27 @@ with tab2:
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
 
 # ==========================================
-# SILENT BACKEND DOM SCRIPT RUNNER (CAMERA LOGIC - Uses Native st.html)
+# SILENT BACKEND DOM SCRIPT RUNNER
 # ==========================================
 st.html(f"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
     (function() {{
+        // Clock functionality targeting the exact DOM node
+        function updateClock() {{
+            const doc = window.parent.document || document;
+            const dateEl = doc.getElementById('dom-date');
+            const timeEl = doc.getElementById('dom-time');
+            if (dateEl && timeEl) {{
+                const now = new Date();
+                dateEl.innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
+                timeEl.innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
+            }}
+        }}
+        setInterval(updateClock, 1000); 
+        updateClock();
+
+        // Camera functionality targeting the exact DOM node
         function attachCameraEvent() {{
             const doc = window.parent.document || document;
             const btn = doc.getElementById('capture-btn');
