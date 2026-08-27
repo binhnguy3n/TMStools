@@ -35,114 +35,185 @@ if "mode" not in st.session_state:
     st.session_state.mode = "MAGNETS"
 
 # ==========================================
-# 80s RETRO-POP / NEO-BRUTALIST THEME CSS
+# DYNAMIC THEME DICTIONARY
 # ==========================================
-st.markdown("""
+# Grabs the toggle state from session state (defaults to False/Light Mode)
+is_synthwave = st.session_state.get("synthwave_toggle", False)
+
+if is_synthwave:
+    theme = {
+        "bg_color": "#090A0F",
+        "panel_bg": "#151821",
+        "border": "#05D9E8",
+        "shadow_1": "#FF2A6D",
+        "shadow_2": "#B100E8",
+        "text_main": "#E0E6ED",
+        "text_header": "#05D9E8",
+        "btn_primary_bg": "#FF2A6D",
+        "btn_primary_shadow": "#05D9E8",
+        "btn_primary_text": "#090A0F",
+        "btn_sec_shadow": "#B100E8",
+        "btn_sec_hover": "#23283B",
+        "active_config_bg": "#FFC900",
+        "active_config_text": "#090A0F",
+        "active_row_bg": "#2A0826", # Deep neon magenta tint
+        "active_row_text": "#FFC900",
+        "zebra_bg": "#0e1017",
+        "session_col": "#FF2A6D",
+        "time_col": "#05D9E8",
+        "next_banner_bg": "#151821",
+        "next_banner_border": "#05D9E8",
+        "next_banner_shadow": "#FF2A6D",
+        "clock_shadow": "#FF2A6D"
+    }
+else:
+    theme = {
+        "bg_color": "#FFFFFF",
+        "panel_bg": "#FAFAFA",
+        "border": "#1E1E1E",
+        "shadow_1": "#4ECDC4",
+        "shadow_2": "#FFE66D",
+        "text_main": "#1E1E1E",
+        "text_header": "#1E1E1E",
+        "btn_primary_bg": "#FF6B6B",
+        "btn_primary_shadow": "#1E1E1E",
+        "btn_primary_text": "#FFFFFF",
+        "btn_sec_shadow": "#9CA3AF",
+        "btn_sec_hover": "#F3F4F6",
+        "active_config_bg": "#FFE66D",
+        "active_config_text": "#1E1E1E",
+        "active_row_bg": "#E6FFFA", # Soft mint
+        "active_row_text": "#00A389",
+        "zebra_bg": "#F3F4F6",
+        "session_col": "#845EF7",
+        "time_col": "#3B82F6",
+        "next_banner_bg": "#E6FFFA",
+        "next_banner_border": "#1E1E1E",
+        "next_banner_shadow": "#00A389",
+        "clock_shadow": "#FF6B6B"
+    }
+
+# ==========================================
+# DYNAMIC NEO-BRUTALIST / SYNTHWAVE CSS
+# ==========================================
+st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
-    html, body, [class*="css"] { font-family: 'Nunito', sans-serif !important; }
+    html, body, [class*="css"] {{ font-family: 'Nunito', sans-serif !important; }}
+    
+    /* Dynamic Backgrounds */
+    .stApp {{ background-color: {theme['bg_color']} !important; }}
+    h1, h2, h3, h4, h5, h6 {{ color: {theme['text_header']} !important; }}
+    p, label, li, span {{ color: {theme['text_main']} !important; }}
     
     /* Inputs */
-    .stTextInput > div > div > input, .stNumberInput > div > div > input, div[data-baseweb="select"] > div {
-        border-radius: 8px !important; border: 3px solid #1E1E1E !important;
-        background-color: #FAFAFA !important; font-weight: 800 !important;
-        box-shadow: 4px 4px 0px #FFE66D !important; transition: all 0.1s ease !important;
-    }
+    .stTextInput > div > div > input, .stNumberInput > div > div > input, div[data-baseweb="select"] > div {{
+        border-radius: 8px !important; border: 3px solid {theme['border']} !important;
+        background-color: {theme['panel_bg']} !important; font-weight: 800 !important; color: {theme['text_header']} !important;
+        box-shadow: 4px 4px 0px {theme['shadow_2']} !important; transition: all 0.1s ease !important;
+    }}
     
     /* Primary buttons (Generate, Now) */
-    button[kind="primary"] {
-        background-color: #FF6B6B !important; color: white !important;
+    button[kind="primary"] {{
+        background-color: {theme['btn_primary_bg']} !important; color: {theme['btn_primary_text']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
-        border: 3px solid #1E1E1E !important; padding: 6px 16px !important; min-height: 42px !important; height: auto !important; margin: 0 !important;
-        box-shadow: 4px 4px 0px #1E1E1E !important; transition: all 0.1s ease !important;
+        border: 3px solid {theme['border']} !important; padding: 6px 16px !important; min-height: 42px !important; height: auto !important; margin: 0 !important;
+        box-shadow: 4px 4px 0px {theme['btn_primary_shadow']} !important; transition: all 0.1s ease !important;
         white-space: nowrap !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;
-    }
-    button[kind="primary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
-    button[kind="primary"]:hover { background-color: #FF8787 !important; }
+    }}
+    button[kind="primary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px {theme['btn_primary_shadow']} !important; }}
+    button[kind="primary"]:hover {{ filter: brightness(1.1); }}
 
-    /* Secondary buttons (Config Modes) - Square with Gray Drop Shadow */
-    button[kind="secondary"] {
-        background-color: white !important; color: #1E1E1E !important;
+    /* Secondary buttons (Config Modes) */
+    button[kind="secondary"] {{
+        background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 22px !important;
-        border: 3px solid #1E1E1E !important; width: 46px !important; height: 46px !important; padding: 0 !important; margin: 0 !important;
-        box-shadow: 4px 4px 0px #9CA3AF !important; transition: all 0.1s ease !important;
+        border: 3px solid {theme['border']} !important; width: 46px !important; height: 46px !important; padding: 0 !important; margin: 0 !important;
+        box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important;
         display: inline-flex !important; align-items: center !important; justify-content: center !important;
-    }
-    button[kind="secondary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #9CA3AF !important; }
-    button[kind="secondary"]:hover { background-color: #F3F4F6 !important; }
+    }}
+    button[kind="secondary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px {theme['btn_sec_shadow']} !important; }}
+    button[kind="secondary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
 
-    /* Active Config Button (Disabled state) - Turns Yellow */
-    button[kind="secondary"]:disabled {
-        background-color: #FFE66D !important; color: #1E1E1E !important;
-        transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #9CA3AF !important;
-        opacity: 1 !important; cursor: default !important; border-color: #1E1E1E !important;
-    }
+    /* Active Config Button (Disabled state) */
+    button[kind="secondary"]:disabled {{
+        background-color: {theme['active_config_bg']} !important; color: {theme['active_config_text']} !important;
+        transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px {theme['btn_sec_shadow']} !important;
+        opacity: 1 !important; cursor: default !important; border-color: {theme['border']} !important;
+    }}
 
-    /* Tertiary buttons (Refresh icon) - Square with Black Drop Shadow */
-    button[kind="tertiary"] {
-        background-color: white !important; color: #1E1E1E !important;
+    /* Tertiary buttons (Refresh icon) */
+    button[kind="tertiary"] {{
+        background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 20px !important;
-        border: 3px solid #1E1E1E !important; width: 42px !important; height: 42px !important; padding: 0 !important; margin: 0 !important;
-        box-shadow: 4px 4px 0px #1E1E1E !important; transition: all 0.1s ease !important;
+        border: 3px solid {theme['border']} !important; width: 42px !important; height: 42px !important; padding: 0 !important; margin: 0 !important;
+        box-shadow: 4px 4px 0px {theme['border']} !important; transition: all 0.1s ease !important;
         display: inline-flex !important; align-items: center !important; justify-content: center !important;
-    }
-    button[kind="tertiary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
-    button[kind="tertiary"]:hover { background-color: #E6FFFA !important; }
+    }}
+    button[kind="tertiary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px {theme['border']} !important; }}
+    button[kind="tertiary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
 
     /* Preset Info Boxes */
-    div[data-testid="stAlert"] {
-        border-radius: 8px !important; background-color: #F0F9FF !important;
-        border: 3px solid #1E1E1E !important; color: #1E1E1E !important; 
-        box-shadow: 5px 5px 0px #4ECDC4 !important; font-weight: 800 !important;
-    }
+    div[data-testid="stAlert"] {{
+        border-radius: 8px !important; background-color: {theme['panel_bg']} !important;
+        border: 3px solid {theme['border']} !important; color: {theme['text_main']} !important; 
+        box-shadow: 5px 5px 0px {theme['shadow_1']} !important; font-weight: 800 !important;
+    }}
     
-    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-    .stTabs [data-baseweb="tab"] { border-radius: 12px 12px 0 0 !important; font-weight: 900 !important; padding: 10px 20px !important; }
+    .stTabs [data-baseweb="tab-list"] {{ gap: 10px; }}
+    .stTabs [data-baseweb="tab"] {{ border-radius: 12px 12px 0 0 !important; font-weight: 900 !important; padding: 10px 20px !important; background-color: transparent; }}
+    .stTabs [aria-selected="true"] {{ background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-bottom: none !important; }}
     
     /* 80s Table Styling */
-    [data-testid="stTable"] { 
-        background-color: white !important; padding: 10px; border-radius: 8px; 
-        border: 3px solid #1E1E1E !important; box-shadow: 6px 6px 0px #FFE66D !important; margin-bottom: 20px;
-    }
-    [data-testid="stTable"] table { width: 100% !important; border-collapse: collapse !important; }
-    [data-testid="stTable"] th { background-color: #FAFAFA !important; border-bottom: 3px solid #1E1E1E !important; font-weight: 900 !important; white-space: nowrap !important;}
-    [data-testid="stTable"] td, [data-testid="stTable"] th { padding: 12px 10px !important; font-weight: 700; color: #1E1E1E; white-space: nowrap !important;}
+    [data-testid="stTable"] {{ 
+        background-color: {theme['bg_color']} !important; padding: 10px; border-radius: 8px; 
+        border: 3px solid {theme['border']} !important; box-shadow: 6px 6px 0px {theme['shadow_2']} !important; margin-bottom: 20px;
+    }}
+    [data-testid="stTable"] table {{ width: 100% !important; border-collapse: collapse !important; }}
+    [data-testid="stTable"] th {{ background-color: {theme['panel_bg']} !important; border-bottom: 3px solid {theme['border']} !important; font-weight: 900 !important; white-space: nowrap !important; color: {theme['text_header']} !important; }}
+    [data-testid="stTable"] td, [data-testid="stTable"] th {{ padding: 12px 10px !important; font-weight: 700; color: {theme['text_main']}; white-space: nowrap !important;}}
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
 # LIVE DATE/TIME BANNER
 # ==========================================
-components.html("""
+components.html(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
-    body { margin: 0; padding: 5px; font-family: 'Nunito', sans-serif; background-color: transparent; }
-    .banner {
-        background-color: #FAFAFA; border-radius: 8px; padding: 16px 20px;
+    body {{ margin: 0; padding: 5px; font-family: 'Nunito', sans-serif; background-color: transparent; }}
+    .banner {{
+        background-color: {theme['panel_bg']}; border-radius: 8px; padding: 16px 20px;
         display: flex; justify-content: center; align-items: center; gap: 40px; 
-        border: 3px solid #1E1E1E; color: #1E1E1E; box-shadow: 5px 5px 0px #FF6B6B;
-    }
-    .date { font-size: 18px; font-weight: 700; color: #1E1E1E; }
-    .time { font-size: 22px; font-weight: 900; color: #845EF7; }
+        border: 3px solid {theme['border']}; color: {theme['text_main']}; box-shadow: 5px 5px 0px {theme['clock_shadow']};
+    }}
+    .date {{ font-size: 18px; font-weight: 700; color: {theme['text_main']}; }}
+    .time {{ font-size: 22px; font-weight: 900; color: {theme['time_col']}; }}
 </style>
 <div class="banner">
     <div class="date" id="date"></div>
     <div class="time" id="time"></div>
 </div>
 <script>
-    function updateClock() {
+    function updateClock() {{
         const now = new Date();
-        document.getElementById('date').innerText = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        document.getElementById('time').innerText = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
-    }
+        document.getElementById('date').innerText = now.toLocaleDateString('en-US', {{ weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }});
+        document.getElementById('time').innerText = now.toLocaleTimeString('en-US', {{ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }});
+    }}
     setInterval(updateClock, 1000); updateClock();
 </script>
 """, height=90)
 
+
+# Title and Toggle Header Layout
+col_title, col_toggle = st.columns([3, 1])
+with col_title:
+    st.title("🧰 TMS Tools")
+with col_toggle:
+    st.markdown("<br>", unsafe_allow_html=True) # spacing
+    st.toggle("🕶️ Synthwave", key="synthwave_toggle")
+
 status_banner = st.empty()
-
-st.title("🧰 TMS Tools")
-
 tab1, tab2 = st.tabs(["⏱️ Session Tracker", "📊 Percentage Calculator"])
 
 def format_12h(dt):
@@ -157,7 +228,6 @@ with tab1:
     st.write("##### Configuration Mode")
     mode = st.session_state.mode
     
-    # Mathematical columns to keep the mode buttons evenly and tightly spaced
     col_m1, col_m2, col_m3, col_mspace = st.columns([1, 1, 1, 15], gap="small")
     with col_m1:
         st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset")
@@ -213,7 +283,6 @@ with tab1:
     
     st.divider()
     
-    # Exact mathematical ratio so all 3 buttons are perfectly equidistant based on their pixel widths
     col_gen, col_ref, col_cam, col_spacer = st.columns([4.0, 1.0, 1.0, 10.0], gap="small")
     
     with col_gen:
@@ -222,54 +291,53 @@ with tab1:
             
     if st.session_state.schedule_generated:
         with col_ref:
-            # Setting type to 'tertiary' allows us to style it completely differently from the Config buttons!
-            st.button("🔄", help="Update the green highlight", type="tertiary")
+            st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            components.html("""
+            components.html(f"""
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
             <style>
                 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
-                body { margin: 0; padding: 0; display: flex; align-items: flex-start; justify-content: flex-start; font-family: 'Nunito', sans-serif;}
-                .camera-btn {
-                    background-color: white; color: #1E1E1E; border: 3px solid #1E1E1E; border-radius: 8px;
-                    width: 42px; height: 42px; font-size: 20px; box-shadow: 4px 4px 0px #1E1E1E; 
+                body {{ margin: 0; padding: 0; display: flex; align-items: flex-start; justify-content: flex-start; font-family: 'Nunito', sans-serif; background: transparent;}}
+                .camera-btn {{
+                    background-color: {theme['panel_bg']}; color: {theme['border']}; border: 3px solid {theme['border']}; border-radius: 8px;
+                    width: 42px; height: 42px; font-size: 20px; box-shadow: 4px 4px 0px {theme['border']}; 
                     cursor: pointer; transition: all 0.1s ease; display: inline-flex; align-items: center; justify-content: center;
                     padding: 0; margin: 0;
-                }
-                .camera-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #1E1E1E; }
-                .camera-btn:hover { background-color: #E6FFFA; }
+                }}
+                .camera-btn:active {{ transform: translate(4px, 4px); box-shadow: 0px 0px 0px {theme['border']}; }}
+                .camera-btn:hover {{ filter: brightness(1.2); }}
             </style>
             <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷</button>
             <script>
-                function takePic() {
-                    try {
+                function takePic() {{
+                    try {{
                         const target = window.parent.document.querySelector('[data-testid="stTable"]');
-                        if (target) {
-                            html2canvas(target, {
-                                backgroundColor: '#ffffff', 
+                        if (target) {{
+                            html2canvas(target, {{
+                                backgroundColor: '{theme["bg_color"]}', 
                                 scale: 2,
-                                onclone: function (clonedDoc) {
+                                onclone: function (clonedDoc) {{
                                     const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
-                                    cells.forEach(cell => {
+                                    cells.forEach(cell => {{
                                         cell.style.fontFamily = 'Arial, sans-serif';
                                         cell.style.letterSpacing = 'normal';
                                         cell.style.whiteSpace = 'nowrap';
-                                    });
-                                }
-                            }).then(canvas => {
+                                    }});
+                                }}
+                            }}).then(canvas => {{
                                 const link = document.createElement('a');
                                 link.download = 'TMS_Schedule.png';
                                 link.href = canvas.toDataURL();
                                 link.click();
-                            });
-                        } else {
+                            }});
+                        }} else {{
                             alert('Table not found.');
-                        }
-                    } catch (e) {
+                        }}
+                    }} catch (e) {{
                         alert('Browser security prevents capturing the image directly. Please take a manual screenshot.');
-                    }
-                }
+                    }}
+                }}
             </script>
             """, height=50)
             
@@ -296,8 +364,8 @@ with tab1:
             
             if banner_msg == "" and local_now < current_time:
                 bb_text = f"{format_12h(bring_back)}" if i > 1 else ""
-                session_html = f'<span style="color: #845EF7; font-weight: 900;">Session {i}</span>'
-                time_html = f'<span style="color: #3B82F6; font-weight: 900;">{bb_text}</span>' if bb_text else ""
+                session_html = f'<span style="color: {theme["session_col"]}; font-weight: 900;">Session {i}</span>'
+                time_html = f'<span style="color: {theme["time_col"]}; font-weight: 900;">{bb_text}</span>' if bb_text else ""
                 spacing = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" if bb_text else ""
                 banner_msg = f"Next: &nbsp;&nbsp; {session_html}{spacing}{time_html}"
             
@@ -315,7 +383,7 @@ with tab1:
             banner_msg = "All sessions started for today!"
                 
         status_banner.markdown(f"""
-        <div style="background-color: #E6FFFA; border: 3px solid #1E1E1E; box-shadow: 5px 5px 0px #00A389; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: #1E1E1E; font-weight: 800; text-align: center; font-size: 18px;">
+        <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
             {banner_msg}
         </div>
         """, unsafe_allow_html=True)
@@ -327,19 +395,21 @@ with tab1:
                     style_str = ""
                     
                     if r == active_idx:
-                        style_str += "background-color: #E6FFFA; "
+                        style_str += f"background-color: {theme['active_row_bg']}; "
                         if c == "Session":
-                            style_str += "color: #845EF7; font-weight: 900;" 
+                            style_str += f"color: {theme['session_col']}; font-weight: 900;" 
                         else:
-                            style_str += "color: #00A389; font-weight: 900;" 
+                            style_str += f"color: {theme['active_row_text']}; font-weight: 900;" 
                     else:
                         if row_num % 2 == 1:
-                            style_str += "background-color: #F3F4F6; "
+                            style_str += f"background-color: {theme['zebra_bg']}; "
                         else:
-                            style_str += "background-color: #FFFFFF; "
+                            style_str += f"background-color: {theme['bg_color']}; "
                             
                         if c == "Session":
-                            style_str += "color: #845EF7; font-weight: 900;" 
+                            style_str += f"color: {theme['session_col']}; font-weight: 900;" 
+                        else:
+                            style_str += f"color: {theme['text_main']};"
                             
                     df_style.at[r, c] = style_str
             return df_style
