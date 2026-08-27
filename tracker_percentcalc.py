@@ -60,23 +60,34 @@ st.markdown("""
     button[kind="primary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
     button[kind="primary"]:hover { background-color: #FF8787 !important; }
 
-    /* Secondary buttons (Mode Selectors, Refresh) */
+    /* Secondary buttons (Config Modes) - Square with Gray Drop Shadow */
     button[kind="secondary"] {
+        background-color: white !important; color: #1E1E1E !important;
+        border-radius: 8px !important; font-weight: 900 !important; font-size: 22px !important;
+        border: 3px solid #1E1E1E !important; width: 46px !important; height: 46px !important; padding: 0 !important; margin: 0 !important;
+        box-shadow: 4px 4px 0px #9CA3AF !important; transition: all 0.1s ease !important;
+        display: inline-flex !important; align-items: center !important; justify-content: center !important;
+    }
+    button[kind="secondary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #9CA3AF !important; }
+    button[kind="secondary"]:hover { background-color: #F3F4F6 !important; }
+
+    /* Active Config Button (Disabled state) - Turns Yellow */
+    button[kind="secondary"]:disabled {
+        background-color: #FFE66D !important; color: #1E1E1E !important;
+        transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #9CA3AF !important;
+        opacity: 1 !important; cursor: default !important; border-color: #1E1E1E !important;
+    }
+
+    /* Tertiary buttons (Refresh icon) - Square with Black Drop Shadow */
+    button[kind="tertiary"] {
         background-color: white !important; color: #1E1E1E !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 20px !important;
         border: 3px solid #1E1E1E !important; width: 42px !important; height: 42px !important; padding: 0 !important; margin: 0 !important;
         box-shadow: 4px 4px 0px #1E1E1E !important; transition: all 0.1s ease !important;
         display: inline-flex !important; align-items: center !important; justify-content: center !important;
     }
-    button[kind="secondary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
-    button[kind="secondary"]:hover { background-color: #E6FFFA !important; }
-
-    /* The "Active Tab" Hack: Any disabled secondary button looks like a pressed red button */
-    button[kind="secondary"]:disabled {
-        background-color: #FF6B6B !important; color: white !important;
-        transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important;
-        opacity: 1 !important; cursor: default !important; border-color: #1E1E1E !important;
-    }
+    button[kind="tertiary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
+    button[kind="tertiary"]:hover { background-color: #E6FFFA !important; }
 
     /* Preset Info Boxes */
     div[data-testid="stAlert"] {
@@ -143,10 +154,11 @@ def format_12h(dt):
 with tab1:
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Mode selection using visual emoji buttons
     st.write("##### Configuration Mode")
     mode = st.session_state.mode
-    col_m1, col_m2, col_m3, col_mspace = st.columns([0.15, 0.15, 0.15, 2.5])
+    
+    # Mathematical columns to keep the mode buttons evenly and tightly spaced
+    col_m1, col_m2, col_m3, col_mspace = st.columns([1, 1, 1, 15], gap="small")
     with col_m1:
         st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset")
     with col_m2:
@@ -201,8 +213,8 @@ with tab1:
     
     st.divider()
     
-    # Grouped strictly left to make them equidistant visually
-    col_gen, col_ref, col_cam, col_spacer = st.columns([1.3, 0.35, 0.35, 2.5])
+    # Exact mathematical ratio so all 3 buttons are perfectly equidistant based on their pixel widths
+    col_gen, col_ref, col_cam, col_spacer = st.columns([4.0, 1.0, 1.0, 10.0], gap="small")
     
     with col_gen:
         if st.button("Generate Schedule", type="primary"):
@@ -210,7 +222,8 @@ with tab1:
             
     if st.session_state.schedule_generated:
         with col_ref:
-            st.button("🔄", help="Update the green highlight")
+            # Setting type to 'tertiary' allows us to style it completely differently from the Config buttons!
+            st.button("🔄", help="Update the green highlight", type="tertiary")
             
         with col_cam:
             components.html("""
@@ -320,7 +333,6 @@ with tab1:
                         else:
                             style_str += "color: #00A389; font-weight: 900;" 
                     else:
-                        # Zebra Striping for inactive rows
                         if row_num % 2 == 1:
                             style_str += "background-color: #F3F4F6; "
                         else:
