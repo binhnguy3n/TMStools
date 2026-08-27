@@ -46,12 +46,13 @@ st.markdown("""
         box-shadow: 4px 4px 0px #FFE66D !important; transition: all 0.1s ease !important;
     }
     
-    /* Primary buttons (Generate, Now) */
+    /* Primary buttons (Generate, Now) - Fixed wrapping issue */
     button[kind="primary"] {
         background-color: #FF6B6B !important; color: white !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
-        border: 3px solid #1E1E1E !important; padding: 4px 20px !important; height: 42px !important; margin: 0 !important;
+        border: 3px solid #1E1E1E !important; padding: 6px 16px !important; min-height: 42px !important; height: auto !important; margin: 0 !important;
         box-shadow: 4px 4px 0px #1E1E1E !important; transition: all 0.1s ease !important;
+        white-space: nowrap !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;
     }
     button[kind="primary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
     button[kind="primary"]:hover { background-color: #FF8787 !important; }
@@ -59,13 +60,12 @@ st.markdown("""
     /* Secondary buttons (Refresh) */
     button[kind="secondary"] {
         background-color: white !important; color: #1E1E1E !important;
-        border: 3px solid #1E1E1E !important; border-radius: 8px !important;
-        width: 42px !important; height: 42px !important; margin: 0 !important;
-        padding: 0 !important; font-size: 20px !important;
-        box-shadow: 3px 3px 0px #1E1E1E !important; transition: all 0.1s ease !important;
-        display: flex !important; align-items: center !important; justify-content: center !important; 
+        border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
+        border: 3px solid #1E1E1E !important; padding: 6px 16px !important; min-height: 42px !important; height: auto !important; margin: 0 !important;
+        box-shadow: 4px 4px 0px #1E1E1E !important; transition: all 0.1s ease !important;
+        white-space: nowrap !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;
     }
-    button[kind="secondary"]:active { transform: translate(3px, 3px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
+    button[kind="secondary"]:active { transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px #1E1E1E !important; }
     button[kind="secondary"]:hover { background-color: #E6FFFA !important; }
 
     /* Preset Info Boxes */
@@ -84,17 +84,9 @@ st.markdown("""
         border: 3px solid #1E1E1E !important; box-shadow: 6px 6px 0px #FFE66D !important; margin-bottom: 20px;
     }
     [data-testid="stTable"] table { width: 100% !important; border-collapse: collapse !important; }
-    [data-testid="stTable"] th { background-color: #FAFAFA !important; border-bottom: 3px solid #1E1E1E !important; font-weight: 900 !important; }
-    [data-testid="stTable"] td, [data-testid="stTable"] th { padding: 12px 10px !important; font-weight: 700; color: #1E1E1E; }
+    [data-testid="stTable"] th { background-color: #FAFAFA !important; border-bottom: 3px solid #1E1E1E !important; font-weight: 900 !important; white-space: nowrap !important;}
+    [data-testid="stTable"] td, [data-testid="stTable"] th { padding: 12px 10px !important; font-weight: 700; color: #1E1E1E; white-space: nowrap !important;}
     [data-testid="stTable"] tr { border-bottom: 2px solid #F3F4F6 !important; }
-
-    /* Target the Horizontal container of the Next Session Banner so it styles the whole row including the button */
-    div[data-testid="stHorizontalBlock"]:has(.banner-text-target) {
-        background-color: #E6FFFA !important; border: 3px solid #1E1E1E !important;
-        box-shadow: 5px 5px 0px #00A389 !important; border-radius: 8px !important;
-        padding: 8px 16px !important; align-items: center !important;
-        margin-top: -5px !important; margin-bottom: 25px !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -147,7 +139,7 @@ with tab1:
     col_time, col_info = st.columns([1.2, 2])
     
     with col_time:
-        st.write("##### First Session Time")
+        st.write("##### Initial Start Time")
         
         col_btn, col_tz = st.columns([0.8, 1.2], gap="small")
         with col_btn:
@@ -189,10 +181,16 @@ with tab1:
     
     st.divider()
     
-    if st.button("Generate Schedule", type="primary"):
-        st.session_state.schedule_generated = True
-        
+    # Action Buttons (Generate and Refresh side-by-side)
+    col_gen, col_ref, col_spacer = st.columns([1.2, 1.2, 2])
+    with col_gen:
+        if st.button("Generate Schedule", type="primary"):
+            st.session_state.schedule_generated = True
+            
     if st.session_state.schedule_generated:
+        with col_ref:
+            st.button("🔄 Refresh", help="Update the green highlight")
+            
         tracker_data = []
         current_time = start_dt
         
@@ -233,18 +231,11 @@ with tab1:
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
-        # Builds the banner with text centered and the refresh button hugging the right edge
-        with status_banner.container():
-            col_spacer, col_text, col_ref = st.columns([0.15, 0.7, 0.15])
-            
-            with col_spacer:
-                st.empty()
-                
-            with col_text:
-                st.markdown(f"<div class='banner-text-target' style='color: #1E1E1E; font-weight: 800; text-align: center; font-size: 18px; margin-top: 4px;'>{banner_msg}</div>", unsafe_allow_html=True)
-            
-            with col_ref:
-                st.button("🔄", key="refresh_banner", help="Refresh Highlight")
+        status_banner.markdown(f"""
+        <div style="background-color: #E6FFFA; border: 3px solid #1E1E1E; box-shadow: 5px 5px 0px #00A389; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: #1E1E1E; font-weight: 800; text-align: center; font-size: 18px;">
+            {banner_msg}
+        </div>
+        """, unsafe_allow_html=True)
             
         def highlight_custom_cells(x):
             df_style = pd.DataFrame('', index=x.index, columns=x.columns)
@@ -267,39 +258,54 @@ with tab1:
         
         st.table(styled_df)
         
-        # Standalone Camera Component below the table
-        components.html("""
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-        <style>
-            body { margin: 0; padding: 0; display: flex; justify-content: flex-start;}
-            .camera-btn {
-                background-color: white; color: #1E1E1E; border: 3px solid #1E1E1E; border-radius: 8px;
-                width: 42px; height: 42px; font-size: 20px; box-shadow: 3px 3px 0px #1E1E1E; 
-                cursor: pointer; transition: all 0.1s ease; display: flex; align-items: center; justify-content: center;
-            }
-            .camera-btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px #1E1E1E; }
-        </style>
-        <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷</button>
-        <script>
-            function takePic() {
-                try {
-                    const target = window.parent.document.querySelector('[data-testid="stTable"]');
-                    if (target) {
-                        html2canvas(target, {backgroundColor: '#ffffff', scale: 2}).then(canvas => {
-                            const link = document.createElement('a');
-                            link.download = 'TMS_Schedule.png';
-                            link.href = canvas.toDataURL();
-                            link.click();
-                        });
-                    } else {
-                        alert('Table not found.');
-                    }
-                } catch (e) {
-                    alert('Browser security prevents capturing the image directly on the cloud. Please take a manual screenshot.');
+        # Standalone Camera Component below the table, aligned to the right
+        col_cam_space, col_cam_btn = st.columns([8, 1])
+        with col_cam_btn:
+            components.html("""
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+            <style>
+                body { margin: 0; padding: 0; display: flex; justify-content: flex-end;}
+                .camera-btn {
+                    background-color: white; color: #1E1E1E; border: 3px solid #1E1E1E; border-radius: 8px;
+                    width: 42px; height: 42px; font-size: 20px; box-shadow: 3px 3px 0px #1E1E1E; 
+                    cursor: pointer; transition: all 0.1s ease; display: flex; align-items: center; justify-content: center;
                 }
-            }
-        </script>
-        """, height=60)
+                .camera-btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px #1E1E1E; }
+            </style>
+            <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷</button>
+            <script>
+                function takePic() {
+                    try {
+                        const target = window.parent.document.querySelector('[data-testid="stTable"]');
+                        if (target) {
+                            html2canvas(target, {
+                                backgroundColor: '#ffffff', 
+                                scale: 2,
+                                // This onclone function forces html2canvas to use a standard web-safe font 
+                                // during the screenshot to prevent the letters from squishing together
+                                onclone: function (clonedDoc) {
+                                    const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
+                                    cells.forEach(cell => {
+                                        cell.style.fontFamily = 'Arial, sans-serif';
+                                        cell.style.letterSpacing = 'normal';
+                                        cell.style.whiteSpace = 'nowrap';
+                                    });
+                                }
+                            }).then(canvas => {
+                                const link = document.createElement('a');
+                                link.download = 'TMS_Schedule.png';
+                                link.href = canvas.toDataURL();
+                                link.click();
+                            });
+                        } else {
+                            alert('Table not found.');
+                        }
+                    } catch (e) {
+                        alert('Browser security prevents capturing the image directly. Please take a manual screenshot.');
+                    }
+                }
+            </script>
+            """, height=60)
 
 # ==========================================
 # TAB 2: PERCENTAGE CALCULATOR
