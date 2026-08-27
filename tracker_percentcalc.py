@@ -122,10 +122,10 @@ st.markdown(f"""
         padding-left: 2px !important; padding-right: 2px !important;
     }}
     
-    /* Stop Streamlit flexbox from dynamically squishing/stretching buttons */
+    /* Stop Streamlit flexbox from stretching buttons */
     div[data-testid="stButton"] {{ width: fit-content !important; }}
 
-    /* Primary buttons (Generate, Now) */
+    /* 1. PRIMARY BUTTONS (Generate, Now) */
     button[kind="primary"] {{
         background-color: {theme['btn_primary_bg']} !important; color: {theme['btn_primary_text']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
@@ -136,7 +136,7 @@ st.markdown(f"""
     button[kind="primary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="primary"]:hover {{ filter: brightness(1.1); }}
 
-    /* Secondary buttons (Theme Toggle ONLY) -> Keeps text wide dynamically */
+    /* 2. SECONDARY BUTTONS (Theme Toggle) - Dynamic width for text */
     button[kind="secondary"] {{
         background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
@@ -147,12 +147,20 @@ st.markdown(f"""
     button[kind="secondary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="secondary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
 
-    /* Tertiary buttons (Config Modes, Refresh, Camera) - SLIM, LOCKED 40x48 PILLS */
+    /* 3. SECONDARY BUTTONS WITH TOOLTIPS (Refresh & Camera) - LOCKED 48x48 SQUARES */
+    div[data-testid="stTooltipHoverTarget"] button[kind="secondary"] {{
+        font-size: 22px !important;
+        width: 48px !important; min-width: 48px !important; max-width: 48px !important;
+        height: 48px !important; padding: 0 !important;
+        display: flex !important; align-items: center !important; justify-content: center !important;
+    }}
+
+    /* 4. TERTIARY BUTTONS (Config Modes) - SLIM, LOCKED 32x48 PILLS */
     button[kind="tertiary"] {{
         background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
-        border-radius: 8px !important; font-weight: 900 !important; font-size: 20px !important;
+        border-radius: 8px !important; font-weight: 900 !important; font-size: 18px !important;
         border: 3px solid {theme['border']} !important; 
-        width: 40px !important; min-width: 40px !important; max-width: 40px !important; /* Made significantly slimmer! */
+        width: 32px !important; min-width: 32px !important; max-width: 32px !important; /* Slimmer horizontal profile! */
         height: 48px !important; min-height: 48px !important; max-height: 48px !important; 
         padding: 0 !important; margin: 0 !important; box-sizing: border-box !important;
         box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important;
@@ -180,37 +188,42 @@ st.markdown(f"""
        ---------------------------------------------------- */
        
     /* 1. Nuke ALL Streamlit native tab decorations safely */
-    div[data-testid="stTabIndicator"], div[data-testid="stTabs"] hr {{
+    div[data-testid="stTabIndicator"], div[data-testid="stTabs"] [data-baseweb="tab-highlight"], div[data-testid="stTabs"] [data-baseweb="tab-border"] {{
         display: none !important; opacity: 0 !important; visibility: hidden !important; height: 0px !important; width: 0px !important;
     }}
     
-    /* 2. NUCLEAR OVERRIDE: Destroy Streamlit's hidden clipping walls on all tab containers */
+    /* 2. NUCLEAR OVERRIDE: Shatter Streamlit's hidden clipping walls on all tab containers */
     div[data-testid="stTabs"], div[data-testid="stTabs"] * {{ 
         overflow: visible !important; 
     }}
     
-    /* 3. The Tab Headers - Using robust role="tab" targeting so it works 100% of the time! */
-    button[role="tab"] {{ 
+    /* 3. Give the list container gap spacing and physical room for the shadow */
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] {{ 
+        gap: 16px !important; padding-bottom: 25px !important; padding-top: 5px !important;
+    }}
+    
+    /* 4. The Tab Headers - Targeted universally inside the tab list */
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] button {{ 
         background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
         padding: 8px 24px !important; box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important; 
-        margin: 0px 10px 15px 0px !important; /* Critical margin ensures shadow renders and spaces them out */
+        margin: 0px 8px 15px 0px !important; /* Critical margin ensures shadow renders */
         min-width: fit-content !important; height: auto !important; 
     }}
-    button[role="tab"]:hover {{ 
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] button:hover {{ 
         background-color: {theme['btn_sec_hover']} !important; 
     }}
     
-    /* 4. The Active Tab - Press animation */
-    button[role="tab"][aria-selected="true"] {{ 
+    /* 5. The Active Tab - Press animation */
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="true"] {{ 
         background-color: {theme['btn_primary_bg']} !important; 
         box-shadow: 0px 0px 0px transparent !important; transform: translate(4px, 4px) !important; border-color: {theme['border']} !important;
     }}
     
     /* Force bold text natively on the headers */
-    button[role="tab"] p, button[role="tab"] span {{ 
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] button p, div[data-testid="stTabs"] [data-baseweb="tab-list"] button span {{ 
         font-weight: 900 !important; color: {theme['text_main']} !important; margin: 0 !important;
     }}
-    button[role="tab"][aria-selected="true"] p, button[role="tab"][aria-selected="true"] span {{ 
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="true"] p, div[data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="true"] span {{ 
         color: {theme['btn_primary_text']} !important;
     }}
     
@@ -237,6 +250,7 @@ with col_title:
 with col_toggle:
     st.markdown("<br>", unsafe_allow_html=True) 
     btn_text = "☀️ Light Mode" if is_synthwave else "🕶️ Synthwave"
+    # Assigned 'secondary', leaving it free to stretch horizontally to fit text!
     st.button(btn_text, on_click=toggle_theme, key="theme_btn", type="secondary")
 
 
@@ -282,9 +296,8 @@ with tab1:
         st.write("##### Configuration Mode")
         mode = st.session_state.mode
         
-        # PERFECT EQUIDISTANT SPACING: We give the 3 config buttons plenty of column space (2.5 multiplier on the end)
-        # Because the CSS locks them to 40px wide, the columns physical gaps will evenly spread them!
-        col_m1, col_m2, col_m3, col_mspace = st.columns([1, 1, 1, 2.5], gap="small")
+        # Grid set to [0.8, 0.8, 0.8, 3.5] to give the slim 32px buttons perfect equidistant spacing!
+        col_m1, col_m2, col_m3, col_mspace = st.columns([0.8, 0.8, 0.8, 3.5], gap="small")
         with col_m1:
             st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset", type="tertiary")
         with col_m2:
@@ -336,7 +349,7 @@ with tab1:
     
     st.divider()
     
-    # Bottom alignment vertically securely aligns the primary button and the icon buttons perfectly
+    # Bottom alignment perfectly anchors the Generate button with the Refresh and Camera squares
     col_gen, col_ref, col_cam, col_spacer = st.columns([3, 1, 1, 5], gap="small", vertical_alignment="bottom")
     
     with col_gen:
@@ -345,11 +358,12 @@ with tab1:
             
     if st.session_state.schedule_generated:
         with col_ref:
-            # Type is tertiary, locking it perfectly to the exact same 40x48 dimension class
-            st.button("🔄", help="Update the active highlight", type="tertiary")
+            # Type 'secondary' with a help tooltip locks this to a 48x48 square!
+            st.button("🔄", help="Update the active highlight", type="secondary")
             
         with col_cam:
-            st.button("📷", key="cam_btn", type="tertiary", help="Download Schedule Image")
+            # Type 'secondary' with a help tooltip locks this to a 48x48 square!
+            st.button("📷", key="cam_btn", type="secondary", help="Download Schedule Image")
             
         tracker_data = []
         current_time = start_dt
