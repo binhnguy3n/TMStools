@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-import streamlit.components.v1 as components
 
 # ==========================================
 # PAGE CONFIGURATION & SESSION STATE
@@ -115,7 +114,7 @@ st.markdown(f"""
     button[kind="primary"] {{
         background-color: {theme['btn_primary_bg']} !important; color: {theme['btn_primary_text']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 16px !important;
-        border: 3px solid {theme['border']} !important; padding: 6px 16px !important; min-height: 42px !important; height: auto !important; margin: 0 !important;
+        border: 3px solid {theme['border']} !important; padding: 6px 16px !important; height: 48px !important; margin: 0 !important;
         box-shadow: 4px 4px 0px {theme['btn_primary_shadow']} !important; transition: all 0.1s ease !important;
         white-space: nowrap !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;
     }}
@@ -126,7 +125,7 @@ st.markdown(f"""
     button[kind="secondary"] {{
         background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
         border-radius: 8px !important; font-weight: 900 !important; font-size: 22px !important;
-        border: 3px solid {theme['border']} !important; width: 46px !important; height: 46px !important; padding: 0 !important; margin: 0 !important;
+        border: 3px solid {theme['border']} !important; width: 48px !important; height: 48px !important; padding: 0 !important; margin: 0 !important;
         box-shadow: 4px 4px 0px {theme['btn_sec_shadow']} !important; transition: all 0.1s ease !important;
         display: inline-flex !important; align-items: center !important; justify-content: center !important;
     }}
@@ -140,16 +139,32 @@ st.markdown(f"""
         opacity: 1 !important; cursor: default !important; border-color: {theme['border']} !important;
     }}
 
-    /* Tertiary buttons (Refresh icon) */
+    /* Tertiary buttons (Refresh icon) - Perfectly matched to Camera */
     button[kind="tertiary"] {{
         background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
-        border-radius: 8px !important; font-weight: 900 !important; font-size: 20px !important;
-        border: 3px solid {theme['border']} !important; width: 42px !important; height: 42px !important; padding: 0 !important; margin: 0 !important;
+        border-radius: 8px !important; font-weight: 900 !important; font-size: 22px !important;
+        border: 3px solid {theme['border']} !important; 
+        width: 48px !important; min-width: 48px !important; height: 48px !important; min-height: 48px !important; 
+        padding: 0 !important; margin: 0 !important; box-sizing: border-box !important;
         box-shadow: 4px 4px 0px {theme['border']} !important; transition: all 0.1s ease !important;
         display: inline-flex !important; align-items: center !important; justify-content: center !important;
     }}
     button[kind="tertiary"]:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
     button[kind="tertiary"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
+
+    /* Custom Native Camera Anchor Button */
+    .camera-btn {{
+        background-color: {theme['panel_bg']} !important; color: {theme['border']} !important;
+        border-radius: 8px !important; font-weight: 900 !important; font-size: 22px !important;
+        border: 3px solid {theme['border']} !important; 
+        width: 48px !important; min-width: 48px !important; height: 48px !important; min-height: 48px !important; 
+        padding: 0 !important; margin: 0 !important; box-sizing: border-box !important;
+        box-shadow: 4px 4px 0px {theme['border']} !important; transition: all 0.1s ease !important;
+        display: inline-flex !important; align-items: center !important; justify-content: center !important;
+        text-decoration: none !important; cursor: pointer !important;
+    }}
+    .camera-btn:active {{ transform: translate(4px, 4px) !important; box-shadow: 0px 0px 0px transparent !important; }}
+    .camera-btn:hover {{ background-color: {theme['btn_sec_hover']} !important; color: {theme['border']} !important; }}
 
     /* Preset Info Boxes */
     div[data-testid="stAlert"] {{
@@ -163,17 +178,21 @@ st.markdown(f"""
        ---------------------------------------------------- */
        
     /* 1. Nuke ALL Streamlit native tab decorations safely */
-    [data-testid="stTabIndicator"],
-    .stTabs [data-baseweb="tab-highlight"],
-    .stTabs [data-baseweb="tab-border"],
-    .stTabs [data-testid="stTabBorder"] {{
-        display: none !important; background-color: transparent !important; border: none !important; opacity: 0 !important; height: 0px !important; width: 0px !important;
+    [data-testid="stTabIndicator"], .stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"], .stTabs [data-testid="stTabBorder"] {{
+        display: none !important; background-color: transparent !important; border: none !important; opacity: 0 !important; height: 0px !important; width: 0px !important; visibility: hidden !important;
     }}
     
-    /* 2. Give the container room so drop shadows don't clip */
-    .stTabs [data-baseweb="tab-list"] {{ gap: 16px !important; padding-bottom: 15px !important; overflow: visible !important; }}
+    /* 2. OVERRIDE STREAMLIT CLIPPING: Force all parent tab containers to show overflow */
+    .stTabs, .stTabs > div, .stTabs [data-baseweb="tab-list"] {{ 
+        overflow: visible !important; 
+    }}
     
-    /* 3. The Tabs */
+    /* 3. Give the list container extreme bottom padding so the shadow renders safely */
+    .stTabs [data-baseweb="tab-list"] {{ 
+        gap: 16px !important; padding-bottom: 20px !important; margin-bottom: -5px !important;
+    }}
+    
+    /* 4. The Tabs */
     .stTabs [data-baseweb="tab"] {{ 
         background-color: {theme['panel_bg']} !important; border: 3px solid {theme['border']} !important; border-radius: 8px !important;
         padding: 8px 20px !important; color: {theme['text_main']} !important; font-weight: 900 !important; font-size: 16px !important;
@@ -181,10 +200,11 @@ st.markdown(f"""
     }}
     .stTabs [data-baseweb="tab"]:hover {{ background-color: {theme['btn_sec_hover']} !important; }}
     
-    /* 4. The Active Tab - Using relative positioning to prevent clipping */
+    /* 5. The Active Tab - Press animation using transform */
     .stTabs [aria-selected="true"] {{ 
         background-color: {theme['btn_primary_bg']} !important; color: {theme['btn_primary_text']} !important;
-        box-shadow: 0px 0px 0px transparent !important; position: relative !important; top: 4px !important; left: 4px !important; border-color: {theme['border']} !important;
+        box-shadow: 0px 0px 0px transparent !important; border-color: {theme['border']} !important;
+        transform: translate(4px, 4px) !important; 
     }}
     .stTabs [data-baseweb="tab"] p, .stTabs [data-baseweb="tab"] span {{ font-weight: 900 !important; }}
     
@@ -246,7 +266,6 @@ components.html(f"""
 # ==========================================
 # 3. NEXT SESSION BANNER (Placed directly below clock)
 # ==========================================
-# Keeping this globally available above the tabs means it stays locked below the timer banner at all times
 status_banner = st.empty()
 
 
@@ -265,24 +284,24 @@ def format_12h(dt):
 with tab1:
     st.markdown("<br>", unsafe_allow_html=True)
     
-    st.write("##### Configuration Mode")
-    mode = st.session_state.mode
+    # Restructured Grid Layout: Left Column (Controls) vs Right Column (Info Box)
+    col_left, col_right = st.columns([1.2, 2], gap="large")
     
-    col_m1, col_m2, col_m3, col_mspace = st.columns([1, 1, 1, 15], gap="small")
-    with col_m1:
-        st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset")
-    with col_m2:
-        st.button("✨", key="btn_man", on_click=set_mode, args=("MANIFEST",), disabled=(mode == "MANIFEST"), help="MANIFEST Preset")
-    with col_m3:
-        st.button("⚙️", key="btn_cus", on_click=set_mode, args=("Custom",), disabled=(mode == "Custom"), help="Custom Configuration")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    col_time, col_info = st.columns([1.2, 2])
-    
-    with col_time:
-        st.write("##### Initial Start Time")
+    with col_left:
+        st.write("##### Configuration Mode")
+        mode = st.session_state.mode
         
+        col_m1, col_m2, col_m3, col_mspace = st.columns([1, 1, 1, 8], gap="small")
+        with col_m1:
+            st.button("🧲", key="btn_mag", on_click=set_mode, args=("MAGNETS",), disabled=(mode == "MAGNETS"), help="MAGNETS Preset")
+        with col_m2:
+            st.button("✨", key="btn_man", on_click=set_mode, args=("MANIFEST",), disabled=(mode == "MANIFEST"), help="MANIFEST Preset")
+        with col_m3:
+            st.button("⚙️", key="btn_cus", on_click=set_mode, args=("Custom",), disabled=(mode == "Custom"), help="Custom Configuration")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        st.write("##### Initial Start Time")
         col_btn, col_tz = st.columns([0.8, 1.2], gap="small")
         with col_btn:
             st.button("🕒 Now", on_click=set_time_to_now, type="primary")
@@ -306,8 +325,11 @@ with tab1:
         time_str = f"{hour_val}:{min_val} {ampm_val}"
         start_time_obj = datetime.strptime(time_str, "%I:%M %p").time()
         start_dt = datetime.combine(datetime.today(), start_time_obj)
-    
-    with col_info:
+        
+    with col_right:
+        # Invisible spacer to perfectly vertical-align the info box with the configuration mode buttons
+        st.markdown("<div style='height: 38px;'></div>", unsafe_allow_html=True)
+        
         if mode == "MAGNETS":
             sessions, stim_dur, interval = 10, 10, 50
             st.info("**MAGNETS Preset:** 10 Sessions • 10m Stim • 50m Interval", icon="🧲")
@@ -322,7 +344,7 @@ with tab1:
     
     st.divider()
     
-    # Adjusted ratios to give the Camera column more horizontal breathing room
+    # Action Buttons aligned with exact widths
     col_gen, col_ref, col_cam, col_spacer = st.columns([3.5, 0.8, 1.5, 10.0], gap="small")
     
     with col_gen:
@@ -334,53 +356,12 @@ with tab1:
             st.button("🔄", help="Update the active highlight", type="tertiary")
             
         with col_cam:
-            # Added 12px body padding and increased height to 75 so the drop shadow never hits the invisible iframe wall
-            components.html(f"""
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-            <style>
-                @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
-                body {{ margin: 0; padding: 12px; display: flex; align-items: flex-start; justify-content: flex-start; font-family: 'Nunito', sans-serif; background: transparent;}}
-                .camera-btn {{
-                    background-color: {theme['panel_bg']}; color: {theme['border']}; border: 3px solid {theme['border']}; border-radius: 8px;
-                    width: 42px; height: 42px; font-size: 20px; box-shadow: 4px 4px 0px {theme['border']}; 
-                    cursor: pointer; transition: all 0.1s ease; display: flex; align-items: center; justify-content: center;
-                    padding: 0; margin: 0; box-sizing: border-box; line-height: 1; outline: none;
-                }}
-                .camera-btn:active {{ transform: translate(4px, 4px); box-shadow: 0px 0px 0px transparent; }}
-                .camera-btn:hover {{ filter: brightness(1.2); }}
-            </style>
-            <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷</button>
-            <script>
-                function takePic() {{
-                    try {{
-                        const target = window.parent.document.querySelector('[data-testid="stTable"]');
-                        if (target) {{
-                            html2canvas(target, {{
-                                backgroundColor: '{theme["bg_color"]}', 
-                                scale: 2,
-                                onclone: function (clonedDoc) {{
-                                    const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
-                                    cells.forEach(cell => {{
-                                        cell.style.fontFamily = 'Arial, sans-serif';
-                                        cell.style.letterSpacing = 'normal';
-                                        cell.style.whiteSpace = 'nowrap';
-                                    }});
-                                }}
-                            }}).then(canvas => {{
-                                const link = document.createElement('a');
-                                link.download = 'TMS_Schedule.png';
-                                link.href = canvas.toDataURL();
-                                link.click();
-                            }});
-                        }} else {{
-                            alert('Table not found.');
-                        }}
-                    }} catch (e) {{
-                        alert('Browser security prevents capturing the image directly. Please take a manual screenshot.');
-                    }}
-                }}
-            </script>
-            """, height=75)
+            # Replaced iframe block with identical Native HTML element to perfectly match the adjacent st.button container height
+            st.html(f"""
+            <div style="display: flex; height: 48px; align-items: flex-start; justify-content: flex-start;">
+                <a id="capture-btn" class="camera-btn" title="Download Schedule Image">📷</a>
+            </div>
+            """)
             
         tracker_data = []
         current_time = start_dt
@@ -423,7 +404,7 @@ with tab1:
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
-        # Send the banner text back up the page to the global placeholder below the clock!
+        # Send the banner text back up the page to the global placeholder
         status_banner.markdown(f"""
         <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
             {banner_msg}
@@ -489,3 +470,50 @@ with tab2:
                 data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
                 current_pct += step_pct
             st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
+
+# ==========================================
+# SILENT BACKEND DOM SCRIPT RUNNER (CAMERA CAPTURE LOGIC)
+# ==========================================
+st.html(f"""
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    function attachCameraEvent() {{
+        const parentDoc = window.parent.document || document;
+        const btn = parentDoc.getElementById('capture-btn');
+        
+        if (btn) {{
+            if (!btn.hasAttribute('data-attached')) {{
+                btn.addEventListener('click', function(e) {{
+                    e.preventDefault();
+                    const target = parentDoc.querySelector('[data-testid="stTable"]');
+                    if (target) {{
+                        html2canvas(target, {{
+                            backgroundColor: '{theme["bg_color"]}', 
+                            scale: 2,
+                            onclone: function (clonedDoc) {{
+                                const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
+                                cells.forEach(cell => {{
+                                    cell.style.fontFamily = 'Arial, sans-serif';
+                                    cell.style.letterSpacing = 'normal';
+                                    cell.style.whiteSpace = 'nowrap';
+                                }});
+                            }}
+                        }}).then(canvas => {{
+                            const link = document.createElement('a');
+                            link.download = 'TMS_Schedule.png';
+                            link.href = canvas.toDataURL();
+                            link.click();
+                        }});
+                    }} else {{
+                        alert('Table not found.');
+                    }}
+                }});
+                btn.setAttribute('data-attached', 'true');
+            }}
+        }} else {{
+            setTimeout(attachCameraEvent, 500);
+        }}
+    }}
+    attachCameraEvent();
+</script>
+""")
