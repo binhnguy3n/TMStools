@@ -122,6 +122,14 @@ st.markdown(f"""
         padding-left: 2px !important; padding-right: 2px !important;
     }}
     
+    /* Disabled inputs styled to look natural in the Brutalist theme */
+    input:disabled {{
+        background-color: {theme['zebra_bg']} !important;
+        color: {theme['text_main']} !important;
+        cursor: not-allowed !important;
+        opacity: 0.8 !important;
+    }}
+    
     /* Stop Streamlit flexbox from dynamically squishing/stretching buttons */
     div[data-testid="stButton"] {{ width: fit-content !important; }}
 
@@ -153,6 +161,7 @@ st.markdown(f"""
         width: 48px !important; min-width: 48px !important; max-width: 48px !important;
         height: 48px !important; padding: 0 !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
+        aspect-ratio: 1/1 !important; box-sizing: border-box !important;
     }}
 
     /* Tertiary buttons (Config Modes) - SLIM, LOCKED 32x48 PILLS */
@@ -229,9 +238,9 @@ st.markdown(f"""
     
     /* ---------------------------------------------------- */
     
-    /* 80s Table Styling */
+    /* 80s Table Styling (Applies to both Session Tracker & Percent Calc!) */
     [data-testid="stTable"] {{ 
-        background-color: {theme['bg_color']} !important; padding: 10px; border-radius: 8px; 
+        background-color: {theme['panel_bg']} !important; padding: 10px; border-radius: 8px; 
         border: 3px solid {theme['border']} !important; box-shadow: 6px 6px 0px {theme['shadow_2']} !important; margin-bottom: 20px;
     }}
     [data-testid="stTable"] table {{ width: 100% !important; border-collapse: collapse !important; }}
@@ -277,7 +286,7 @@ status_banner = st.empty()
 # ==========================================
 # 4. TABS
 # ==========================================
-tab1, tab2, tab3 = st.tabs(["⏱️ Session Tracker", "📊 Percentage Calculator", "📚 Protocol Library"])
+tab1, tab2, tab3 = st.tabs(["⏱️ Session Tracker", "📊 % Calculator", "📚 Protocol Library"])
 
 def format_12h(dt):
     return dt.strftime("%I:%M %p").lstrip("0")
@@ -347,7 +356,8 @@ with tab1:
     
     st.divider()
     
-    col_gen, col_ref, col_cam, col_spacer = st.columns([3, 1, 1, 5], gap="small", vertical_alignment="bottom")
+    # Adjusted ratios strictly pulling the square buttons closer to the Generate button
+    col_gen, col_ref, col_cam, col_spacer = st.columns([2.5, 0.6, 0.6, 6.3], gap="small", vertical_alignment="bottom")
     
     with col_gen:
         if st.button("Generate Schedule", type="primary"):
@@ -401,6 +411,7 @@ with tab1:
         if banner_msg == "":
             banner_msg = "All sessions started for today!"
                 
+        # Send the banner text back up the page to the global placeholder
         status_banner.markdown(f"""
         <div style="background-color: {theme['next_banner_bg']}; border: 3px solid {theme['next_banner_border']}; box-shadow: 5px 5px 0px {theme['next_banner_shadow']}; border-radius: 8px; padding: 12px 16px; margin-top: -5px; margin-bottom: 25px; color: {theme['text_main']}; font-weight: 800; text-align: center; font-size: 18px;">
             {banner_msg}
@@ -422,7 +433,7 @@ with tab1:
                         if row_num % 2 == 1:
                             style_str += f"background-color: {theme['zebra_bg']}; "
                         else:
-                            style_str += f"background-color: {theme['bg_color']}; "
+                            style_str += f"background-color: {theme['panel_bg']}; "
                             
                         if c == "Session":
                             style_str += f"color: {theme['session_col']}; font-weight: 900;" 
@@ -440,12 +451,22 @@ with tab1:
 # ==========================================
 with tab2:
     st.markdown("<br>", unsafe_allow_html=True)
-    col_a, col_b = st.columns(2, gap="large")
     
+    st.write("##### Quick 120% RMT Calculator")
+    rmt_col1, rmt_col2 = st.columns(2, gap="large")
+    with rmt_col1:
+        rmt_val = st.number_input("Resting Motor Threshold (RMT)", min_value=0.0, value=0.0, step=1.0)
+    with rmt_col2:
+        st.text_input("120% Target Output", value=f"{rmt_val * 1.2:.1f}" if rmt_val > 0 else "0.0", disabled=True)
+
+    st.divider()
+    
+    col_a, col_b = st.columns(2, gap="large")
     with col_a:
         st.write("##### 1. Known Values")
         known_pct = st.number_input("Known Percentage (%)", min_value=0.1, value=120.0, step=1.0)
-        known_val = st.number_input("Known Value", value=78.0, step=1.0)
+        # Default known value changed to 0.0
+        known_val = st.number_input("Known Value", value=0.0, step=1.0)
     with col_b:
         st.write("##### 2. Table Settings")
         start_pct = st.number_input("Start Percentage (%)", value=30.0, step=1.0)
@@ -454,7 +475,7 @@ with tab2:
     
     st.divider()
     
-    if known_pct > 0:
+    if known_pct > 0 and known_val > 0:
         base_value = known_val / (known_pct / 100)
         step_value = base_value * (step_pct / 100)
         st.info(f"**Base Value (100%):** {base_value:g} &nbsp;&nbsp;|&nbsp;&nbsp; **{step_pct:g}% increment:** {step_value:g}", icon="💡")
@@ -465,7 +486,8 @@ with tab2:
             while current_pct <= end_pct:
                 data.append({"Percentage": f"{current_pct:g}%", "Value": round(base_value * (current_pct / 100), 4)})
                 current_pct += step_pct
-            st.dataframe(pd.DataFrame(data), width="stretch", hide_index=True)
+            # Converting to st.table dynamically applies the Brutalist Theme shadow box globally!
+            st.table(pd.DataFrame(data).style.hide(axis="index"))
 
 # ==========================================
 # TAB 3: PROTOCOL LIBRARY
