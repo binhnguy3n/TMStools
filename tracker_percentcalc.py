@@ -181,8 +181,9 @@ with tab1:
     
     st.divider()
     
-    # Action Buttons (Generate and Refresh side-by-side)
-    col_gen, col_ref, col_spacer = st.columns([1.2, 1.2, 2])
+    # Action Buttons (Generate, Refresh, and Camera side-by-side)
+    col_gen, col_ref, col_cam, col_spacer = st.columns([1.6, 1.2, 1.2, 1.5])
+    
     with col_gen:
         if st.button("Generate Schedule", type="primary"):
             st.session_state.schedule_generated = True
@@ -190,6 +191,55 @@ with tab1:
     if st.session_state.schedule_generated:
         with col_ref:
             st.button("🔄 Refresh", help="Update the green highlight")
+            
+        with col_cam:
+            # Styled identical to the Python buttons above, but triggers JavaScript
+            components.html("""
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap');
+                body { margin: 0; padding: 0; display: flex; align-items: flex-start; font-family: 'Nunito', sans-serif;}
+                .camera-btn {
+                    background-color: white; color: #1E1E1E; border: 3px solid #1E1E1E; border-radius: 8px;
+                    padding: 6px 16px; min-height: 42px; font-size: 16px; font-weight: 900; box-shadow: 4px 4px 0px #1E1E1E; 
+                    cursor: pointer; transition: all 0.1s ease; display: inline-flex; align-items: center; justify-content: center;
+                    white-space: nowrap; text-decoration: none;
+                }
+                .camera-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #1E1E1E; }
+                .camera-btn:hover { background-color: #E6FFFA; }
+            </style>
+            <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷 Save</button>
+            <script>
+                function takePic() {
+                    try {
+                        const target = window.parent.document.querySelector('[data-testid="stTable"]');
+                        if (target) {
+                            html2canvas(target, {
+                                backgroundColor: '#ffffff', 
+                                scale: 2,
+                                onclone: function (clonedDoc) {
+                                    const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
+                                    cells.forEach(cell => {
+                                        cell.style.fontFamily = 'Arial, sans-serif';
+                                        cell.style.letterSpacing = 'normal';
+                                        cell.style.whiteSpace = 'nowrap';
+                                    });
+                                }
+                            }).then(canvas => {
+                                const link = document.createElement('a');
+                                link.download = 'TMS_Schedule.png';
+                                link.href = canvas.toDataURL();
+                                link.click();
+                            });
+                        } else {
+                            alert('Table not found.');
+                        }
+                    } catch (e) {
+                        alert('Browser security prevents capturing the image directly. Please take a manual screenshot.');
+                    }
+                }
+            </script>
+            """, height=50)
             
         tracker_data = []
         current_time = start_dt
@@ -213,10 +263,11 @@ with tab1:
                     active_idx = i - 1
             
             if banner_msg == "" and local_now < current_time:
-                bb_text = f" {format_12h(bring_back)}" if i > 1 else ""
+                bb_text = f" &nbsp;{format_12h(bring_back)}" if i > 1 else ""
                 session_html = f'<span style="color: #845EF7; font-weight: 900;">Session {i}</span>'
                 time_html = f'<span style="color: #3B82F6; font-weight: 900;">{bb_text}</span>' if bb_text else ""
-                banner_msg = f"Next: {session_html}{time_html}"
+                # Added strict HTML non-breaking spaces for a clean gap
+                banner_msg = f"Next: &nbsp;&nbsp; {session_html}{time_html}"
             
             bring_back_str = "" if i == 1 else format_12h(bring_back)
             
@@ -257,55 +308,6 @@ with tab1:
         styled_df = pd.DataFrame(tracker_data).style.apply(highlight_custom_cells, axis=None).hide(axis="index")
         
         st.table(styled_df)
-        
-        # Standalone Camera Component below the table, aligned to the right
-        col_cam_space, col_cam_btn = st.columns([8, 1])
-        with col_cam_btn:
-            components.html("""
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-            <style>
-                body { margin: 0; padding: 0; display: flex; justify-content: flex-end;}
-                .camera-btn {
-                    background-color: white; color: #1E1E1E; border: 3px solid #1E1E1E; border-radius: 8px;
-                    width: 42px; height: 42px; font-size: 20px; box-shadow: 3px 3px 0px #1E1E1E; 
-                    cursor: pointer; transition: all 0.1s ease; display: flex; align-items: center; justify-content: center;
-                }
-                .camera-btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px #1E1E1E; }
-            </style>
-            <button class="camera-btn" onclick="takePic()" title="Download Schedule Image">📷</button>
-            <script>
-                function takePic() {
-                    try {
-                        const target = window.parent.document.querySelector('[data-testid="stTable"]');
-                        if (target) {
-                            html2canvas(target, {
-                                backgroundColor: '#ffffff', 
-                                scale: 2,
-                                // This onclone function forces html2canvas to use a standard web-safe font 
-                                // during the screenshot to prevent the letters from squishing together
-                                onclone: function (clonedDoc) {
-                                    const cells = clonedDoc.querySelectorAll('[data-testid="stTable"] th, [data-testid="stTable"] td');
-                                    cells.forEach(cell => {
-                                        cell.style.fontFamily = 'Arial, sans-serif';
-                                        cell.style.letterSpacing = 'normal';
-                                        cell.style.whiteSpace = 'nowrap';
-                                    });
-                                }
-                            }).then(canvas => {
-                                const link = document.createElement('a');
-                                link.download = 'TMS_Schedule.png';
-                                link.href = canvas.toDataURL();
-                                link.click();
-                            });
-                        } else {
-                            alert('Table not found.');
-                        }
-                    } catch (e) {
-                        alert('Browser security prevents capturing the image directly. Please take a manual screenshot.');
-                    }
-                }
-            </script>
-            """, height=60)
 
 # ==========================================
 # TAB 2: PERCENTAGE CALCULATOR
